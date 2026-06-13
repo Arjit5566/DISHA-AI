@@ -138,7 +138,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="relative flex min-h-screen bg-background text-foreground transition-colors duration-300">
+    <div className="relative flex min-h-screen bg-background text-foreground transition-colors duration-300 overflow-x-hidden">
+
+      {/* ── Global Animated Background Decor (User-Friendly EdTech Vibe) ── */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
+        {/* Subtle dot grid pattern */}
+        <div className="absolute inset-0 bg-dot-grid opacity-[0.7] dark:opacity-[0.35]" />
+        
+        {/* Floating blurred ambient orbs */}
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full bg-primary/10 dark:bg-primary/5 blur-[120px] animate-float" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[45vw] h-[45vw] max-w-[550px] max-h-[550px] rounded-full bg-secondary/10 dark:bg-secondary/5 blur-[100px] animate-float-reverse" />
+        
+        {/* Additional accent blob for rich visual feedback */}
+        <div className="absolute top-[40%] right-[15%] w-[25vw] h-[25vw] max-w-[300px] max-h-[300px] rounded-full bg-pink-500/6 dark:bg-pink-500/3 blur-[90px] animate-float" style={{ animationDelay: "2s" }} />
+      </div>
 
       {/* ── Sidebar Overlay (blurred background when sidebar is open) ── */}
       <AnimatePresence>

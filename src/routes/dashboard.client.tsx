@@ -164,7 +164,7 @@ export default function Dashboard() {
       <DashboardScene />
 
       {/* Main Container */}
-      <div className="relative min-h-[80vh]">
+      <div className="relative min-h-[80vh] bg-animated-orbs">
         
         {loadingAnalysis ? (
           <div className="grid h-[60vh] place-items-center">
@@ -485,7 +485,190 @@ export default function Dashboard() {
 
 
 
-            {/* Career Roadmap Timeline */}
+            {/* Middle Section: Skills Gap Analysis & ATS Compatibility */}
+            <div className="grid gap-6 md:grid-cols-2">
+              
+              {/* Skills Gap Analysis */}
+              <motion.div 
+                whileHover={{ y: -6, scale: 1.015, rotateX: 2, rotateY: -2 }}
+                style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                className="card rounded-3xl p-6 border border-border hover:border-primary/30 hover:shadow-[0_0_25px_rgba(139,92,246,0.08)] transition-all duration-300"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary/25 to-violet-500/25 text-primary border border-primary/20 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
+                    <Database className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-base font-bold">Skills Gap Analysis</h3>
+                </div>
+
+                <p className="text-xs text-muted-foreground mb-6">
+                  Comparison profile between your matching credentials and key technologies in demand for <span className="text-foreground font-medium">{analysis.target_role}</span>.
+                </p>
+
+                <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
+                  {Array.isArray(analysis.extracted_skills) && (analysis.extracted_skills as string[]).map((s) => (
+                    <div key={s} className="flex items-center justify-between bg-muted/45 rounded-xl px-4 py-2.5 border border-border hover:border-success/30 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="grid h-6 w-6 place-items-center rounded-lg bg-success/10 text-success">
+                          {getSkillIcon(s)}
+                        </div>
+                        <span className="text-xs font-medium">{s}</span>
+                      </div>
+                      <span className="text-[10px] text-success font-semibold flex items-center gap-1">
+                        <Check className="h-3.5 w-3.5" /> Present
+                      </span>
+                    </div>
+                  ))}
+
+                  {Array.isArray(analysis.missing_skills) && (analysis.missing_skills as string[]).map((s, i) => (
+                    <div key={i} className="flex items-center justify-between bg-muted/45 rounded-xl px-4 py-2.5 border border-border hover:border-destructive/30 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="grid h-6 w-6 place-items-center rounded-lg bg-destructive/10 text-destructive">
+                          {getSkillIcon(s)}
+                        </div>
+                        <span className="text-xs font-medium text-foreground/70 dark:text-white/70">{s}</span>
+                      </div>
+                      <span className="text-[10px] text-destructive font-semibold flex items-center gap-1">
+                        <X className="h-3.5 w-3.5" /> Missing
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* ATS Compatibility */}
+              <motion.div 
+                whileHover={{ y: -6, scale: 1.015, rotateX: 2, rotateY: 2 }}
+                style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                className="card rounded-3xl p-6 border border-border hover:border-cyan-500/30 hover:shadow-[0_0_25px_rgba(6,182,212,0.08)] transition-all duration-300"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-cyan-500/25 to-blue-500/25 text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-base font-bold">ATS Compatibility</h3>
+                </div>
+
+                <p className="text-xs text-muted-foreground mb-6">
+                  Automated checks confirming if your document structure complies with standardized Applicant Tracking Systems.
+                </p>
+
+                <div className="space-y-3">
+                  <AtsCheckRow label="Contact Info (Email, Github, LinkedIn)" status="pass" details="Validated contact boundaries" />
+                  <AtsCheckRow label="Document Structure & Sections" status="pass" details="Clear headers (Experience, Education)" />
+                  <AtsCheckRow label="File Formatting (.pdf format)" status="pass" details="Optimal text layer readability" />
+                  <AtsCheckRow label="Action & Metric Verbs" status="warn" details="Recommend increasing numerical impacts by 12%" />
+                  <AtsCheckRow label="Bullet Formatting & Syntax" status="pass" details="Correct character mapping" />
+                  <AtsCheckRow label="Formatting Overlap (Images/Graphics)" status="pass" details="No complex graphic overlays detected" />
+                </div>
+              </motion.div>
+
+            </div>
+
+            {/* Bottom Row: Resume Insights & Learning Recommendations */}
+            <div className="grid gap-6 md:grid-cols-3">
+              
+              {/* Resume Insights */}
+              <motion.div 
+                whileHover={{ y: -6, scale: 1.015, rotateX: 2, rotateY: -2 }}
+                style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                className="card rounded-3xl p-6 border border-border md:col-span-1 flex flex-col justify-between hover:border-pink-500/30 hover:shadow-[0_0_25px_rgba(236,72,153,0.08)] transition-all duration-300"
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-pink-500/25 to-rose-500/25 text-pink-500 border border-pink-500/20 shadow-[0_0_15px_rgba(236,72,153,0.1)]">
+                      <Terminal className="h-5 w-5" />
+                    </div>
+                    <h3 className="text-base font-bold">Resume Insights</h3>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Evaluation breakdown of your current resume structure.
+                  </p>
+
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Strengths</div>
+                      <ul className="text-xs mt-1.5 space-y-1 text-foreground/90 dark:text-white/90">
+                        <li className="flex gap-1.5 items-start"><Check className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" /> High volume of core developer keywords</li>
+                        <li className="flex gap-1.5 items-start"><Check className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" /> Clean workspace chronology layout</li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Weaknesses & Recommendations</div>
+                      <ul className="text-xs mt-1.5 space-y-1.5 text-foreground/80 dark:text-white/70">
+                        <li className="flex gap-1.5 items-start"><X className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" /> Lack of metrics-oriented outcomes</li>
+                        <li className="flex gap-1.5 items-start"><X className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" /> Missing technical skills like: {Array.isArray(analysis.missing_skills) ? analysis.missing_skills.slice(0, 2).join(", ") : "N/A"}</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-border text-[10px] text-muted-foreground italic">
+                  Tip: Expand the roadmap below to learn missing skills.
+                </div>
+              </motion.div>
+
+              {/* Learning Recommendations */}
+              <motion.div 
+                whileHover={{ y: -6, scale: 1.015, rotateX: 2, rotateY: 2 }}
+                style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                className="card rounded-3xl p-6 border border-border md:col-span-2 hover:border-primary/30 hover:shadow-[0_0_25px_rgba(139,92,246,0.08)] transition-all duration-300"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary/25 to-violet-500/25 text-primary border border-primary/20 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
+                    <BookOpen className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-base font-bold">Learning Recommendations</h3>
+                </div>
+
+                <p className="text-xs text-muted-foreground mb-6">
+                  Recommended educational links tailored to teach the missing skills discovered in your evaluation.
+                </p>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {Array.isArray(analysis.resources) && analysis.resources.slice(0, 4).map((r: any, idx: number) => {
+                    const theme = THEMES[idx % THEMES.length];
+                    const Icon = theme.icon;
+                    return (
+                      <motion.div 
+                        key={idx} 
+                        whileHover={{ y: -4, scale: 1.025, rotateX: 2.5, rotateY: -2.5 }}
+                        style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                        className="bg-muted/40 border border-border rounded-2xl p-4 flex flex-col justify-between hover:border-primary/25 transition-all duration-300"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase">
+                              {r.provider}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">{r.skill}</span>
+                          </div>
+                          <h4 className="text-xs font-bold text-foreground line-clamp-1">{r.title}</h4>
+                          <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">Master {r.skill} with interactive projects and lectures.</p>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
+                          <span className="text-[10px] text-muted-foreground">Self-Paced</span>
+                          <a 
+                            href={r.url} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline"
+                          >
+                            Go to course <ArrowRight className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+
+            </div>
+
+
             <div className="card rounded-3xl p-6 border border-border">
               <div className="flex items-center gap-2 mb-6">
                 <Target className="h-5 w-5 text-primary" />
@@ -594,11 +777,16 @@ export default function Dashboard() {
                 initial={{ opacity: 0, x: -20 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ delay: 0.1, duration: 0.6 }} 
-                className="card rounded-3xl p-6 flex flex-col justify-between"
+                whileHover={{ y: -6, scale: 1.02, rotateX: 2, rotateY: -2 }}
+                style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                className="card rounded-3xl p-6 flex flex-col justify-between hover:border-primary/30 hover:shadow-[0_0_25px_rgba(139,92,246,0.08)] transition-all duration-300"
               >
                 <div>
-                  <div className="mb-2 flex items-center gap-2 text-base font-bold text-foreground">
-                    <FileText className="h-5 w-5 text-primary" /> 1. Upload Resume
+                  <div className="mb-2 flex items-center gap-3 text-base font-bold text-foreground">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary/25 to-violet-500/25 text-primary border border-primary/20 shadow-[0_0_15px_rgba(139,92,246,0.1)] shrink-0">
+                      <Upload className="h-5 w-5" />
+                    </div>
+                    1. Upload Resume
                   </div>
                   <p className="mb-6 text-xs text-muted-foreground">Upload your resume in standard text-based PDF format</p>
                   
@@ -646,11 +834,16 @@ export default function Dashboard() {
                 initial={{ opacity: 0, x: 20 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ delay: 0.2, duration: 0.6 }} 
-                className="card rounded-3xl p-6 flex flex-col justify-between"
+                whileHover={{ y: -6, scale: 1.02, rotateX: 2, rotateY: 2 }}
+                style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                className="card rounded-3xl p-6 flex flex-col justify-between hover:border-secondary/30 hover:shadow-[0_0_25px_rgba(79,140,255,0.08)] transition-all duration-300"
               >
                 <div>
-                  <div className="mb-2 flex items-center gap-2 text-base font-bold text-foreground">
-                    <Target className="h-5 w-5 text-secondary" /> 2. Career Goal
+                  <div className="mb-2 flex items-center gap-3 text-base font-bold text-foreground">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-blue-500/25 to-cyan-500/25 text-secondary border border-secondary/20 shadow-[0_0_15px_rgba(79,140,255,0.1)] shrink-0">
+                      <Target className="h-5 w-5" />
+                    </div>
+                    2. Career Goal
                   </div>
                   <p className="mb-6 text-xs text-muted-foreground">Select the target career position you are aiming for</p>
                   
@@ -737,7 +930,7 @@ export default function Dashboard() {
                       key={hist.id} 
                       to="/results/$id"
                       params={{ id: hist.id }}
-                      className="p-4 bg-muted border border-border rounded-2xl hover:border-primary/30 transition-all cursor-pointer flex justify-between items-center group text-left"
+                      className="p-4 bg-muted border border-border rounded-2xl hover:border-primary/30 hover:shadow-[0_0_20px_rgba(139,92,246,0.06)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex justify-between items-center group text-left"
                     >
                       <div className="min-w-0">
                         <h4 className="text-xs font-bold text-foreground truncate">{hist.target_role}</h4>

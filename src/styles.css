@@ -378,3 +378,99 @@
   background-size: 1000px 100%;
   animation: shimmer 1.5s infinite linear;
 }
+
+/* ===== Premium Background Effects ===== */
+
+/* Floating animation for background orbs */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  25% { transform: translateY(-20px) translateX(10px); }
+  50% { transform: translateY(-10px) translateX(-15px); }
+  75% { transform: translateY(-25px) translateX(5px); }
+}
+@keyframes float-reverse {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  25% { transform: translateY(15px) translateX(-10px); }
+  50% { transform: translateY(5px) translateX(12px); }
+  75% { transform: translateY(20px) translateX(-8px); }
+}
+
+/* Glow-pulse for accent elements */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(109, 94, 247, 0.15); }
+  50% { box-shadow: 0 0 40px rgba(109, 94, 247, 0.3); }
+}
+.dark .animate-glow-pulse {
+  animation: glow-pulse-dark 3s ease-in-out infinite;
+}
+@keyframes glow-pulse-dark {
+  0%, 100% { box-shadow: 0 0 20px rgba(124, 110, 250, 0.2); }
+  50% { box-shadow: 0 0 45px rgba(124, 110, 250, 0.4); }
+}
+
+/* Gradient background shift */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Animated gradient orb background container */
+.bg-animated-orbs {
+  position: relative;
+  overflow: hidden;
+}
+.bg-animated-orbs::before,
+.bg-animated-orbs::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+}
+.bg-animated-orbs::before {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+  top: -100px;
+  right: -80px;
+  animation: float 12s ease-in-out infinite;
+}
+.bg-animated-orbs::after {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, var(--color-accent) 0%, transparent 70%);
+  bottom: -60px;
+  left: -60px;
+  animation: float-reverse 15s ease-in-out infinite;
+}
+.dark .bg-animated-orbs::before { opacity: 0.08; }
+.dark .bg-animated-orbs::after  { opacity: 0.06; }
+
+/* Subtle dot-grid overlay */
+.bg-dot-grid {
+  background-image: radial-gradient(circle, var(--color-border) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.dark .bg-dot-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+}
+
+/* Utility classes for premium effects */
+.animate-glow-pulse { animation: glow-pulse 3s ease-in-out infinite; }
+.animate-float { animation: float 8s ease-in-out infinite; }
+.animate-float-reverse { animation: float-reverse 10s ease-in-out infinite; }
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+/* Staggered entrance delays */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.10s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.20s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.30s; }
