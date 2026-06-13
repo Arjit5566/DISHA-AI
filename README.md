@@ -2,7 +2,11 @@ DISHA AI – AI Career Navigation Assistant
 
 Overview
 
-DISHA AI is an AI-powered career guidance platform that helps students and job seekers understand their career readiness, identify skill gaps, discover suitable opportunities, and prepare themselves for their dream careers through personalized recommendations and learning support.
+DISHA AI is an AI-powered career guidance platform designed to help students and job seekers navigate their career journey. It enables users to analyze their resumes, assess readiness for target roles, identify skill gaps, discover alternative career opportunities, prepare for interviews, improve coding skills, and enhance learning through AI-driven assessments.
+
+Rather than simply screening resumes, DISHA AI acts as an intelligent career mentor that guides users from self-assessment to career preparation and opportunity discovery.
+
+---
 
 Problem Statement
 
@@ -12,8 +16,9 @@ Many students and job seekers struggle to understand:
 - Which skills they need to improve.
 - What opportunities they can pursue with their existing skills.
 - How to prepare effectively for placements and interviews.
+- How to practice and assess themselves independently.
 
-Most platforms only screen resumes. DISHA AI provides actionable guidance and encourages users by highlighting both growth areas and immediate opportunities.
+Most platforms address only one part of this journey. DISHA AI provides an end-to-end solution that empowers users throughout their career preparation process.
 
 ---
 
@@ -25,6 +30,8 @@ Resume Analysis
 - Extract technical and soft skills from resumes.
 - Analyze the user's profile.
 
+---
+
 Career Goal Analysis
 
 - Select a target career role.
@@ -32,17 +39,32 @@ Career Goal Analysis
 - Display matching skills and missing skills.
 - Generate a career readiness score.
 
+---
+
 AI Role Recommendations
 
 - Recommend alternative job roles based on the user's existing skills.
-- Display the top matching roles with compatibility percentages.
+- Display top matching roles with compatibility percentages.
 - Help users identify roles they can apply for immediately.
+
+---
+
+Alternative Career Path Recommendations
+
+- Suggest other career options apart from the selected target role.
+- Discover career paths that align with existing skills.
+- Display compatibility scores for alternative career choices.
+- Encourage users by highlighting immediate opportunities.
+
+---
 
 Job & Internship Opportunities
 
 - Suggest relevant job opportunities based on the user's profile.
 - Recommend internship opportunities aligned with the user's skills and interests.
-- Help users explore career opportunities suitable for their experience level.
+- Help users explore opportunities suitable for their experience level.
+
+---
 
 Resume Builder
 
@@ -50,12 +72,16 @@ Resume Builder
 - Help users create ATS-friendly resumes.
 - Allow users to improve and update their resumes easily.
 
+---
+
 Quiz Generator
 
-- Generate quizzes from any uploaded notes or study material.
+- Generate quizzes from uploaded notes or study material.
 - Automatically create multiple-choice questions.
 - Help students practice concepts and prepare for examinations.
 - Enable self-assessment through AI-generated quizzes.
+
+---
 
 Lab Evaluator
 
@@ -65,11 +91,25 @@ Lab Evaluator
 - Provide AI-generated feedback and suggestions.
 - Help students understand mistakes and improve coding practices.
 
+---
+
+Mock Interview Simulator
+
+- Conduct AI-powered mock interview sessions tailored to the user's target role.
+- Generate role-specific interview questions.
+- Evaluate responses and provide constructive feedback.
+- Help users improve confidence and interview performance.
+- Identify strengths and areas requiring improvement.
+
+---
+
 Skill Gap Insights
 
 - Highlight skills required for the selected role.
 - Identify areas for improvement.
 - Provide suggestions for upskilling.
+
+---
 
 Learning Roadmap
 
@@ -87,24 +127,34 @@ Frontend
 - Vite
 - Tailwind CSS
 
+---
+
 Backend
 
 - Python
 - Flask
+
+---
 
 Database
 
 - Supabase
 - MongoDB
 
+---
+
 Authentication
 
 - Supabase Auth
 - Google OAuth 2.0
 
+---
+
 AI Integration
 
 - Google Gemini API
+
+---
 
 Tools & Development
 
@@ -113,15 +163,18 @@ Tools & Development
 - npm
 - VS Code
 
+---
+
 Core AI Modules
 
 - Resume Skill Extraction Engine
 - Career Readiness Analyzer
-- Role Recommendation Engine
+- Alternative Career Recommendation Engine
 - Opportunity Matching Engine
 - Quiz Generation Engine
 - Learning Roadmap Generator
 - Lab Evaluation Engine
+- Mock Interview Engine
 
 ---
 
@@ -137,6 +190,8 @@ Skill Extraction
 ↓
 Structured Skill Dataset
 
+---
+
 Career Guidance Flow
 
 Extracted Skills
@@ -147,9 +202,13 @@ Skill Gap Analysis
 ↓
 Career Readiness Score
 ↓
-Alternative Role Recommendation
+Alternative Career Recommendation
+↓
+Role Recommendation
 ↓
 Learning Roadmap Generation
+
+---
 
 Opportunity Recommendation Flow
 
@@ -160,6 +219,8 @@ Profile Matching Engine
 Job Opportunities
 +
 Internship Opportunities
+
+---
 
 Quiz Generation Flow
 
@@ -172,6 +233,8 @@ Question Generation
 Quiz Creation
 ↓
 Practice & Self-Assessment
+
+---
 
 Lab Evaluator Flow
 
@@ -186,6 +249,22 @@ Error Detection
 AI Feedback & Suggestions
 ↓
 Improvement Recommendations
+
+---
+
+Mock Interview Flow
+
+Target Role Selection
+↓
+Question Generation
+↓
+Mock Interview Session
+↓
+Response Evaluation
+↓
+AI Feedback
+↓
+Performance Insights
 
 ---
 
@@ -225,11 +304,17 @@ Calculate Readiness Score
 ↓
 Recommend Alternative Roles
 ↓
+Suggest Alternative Career Paths
+↓
 Suggest Jobs & Internships
 ↓
 Generate Learning Roadmap
 ↓
+Launch Mock Interview Practice
+↓
 Build/Improve Resume
+
+---
 
 Quiz Workflow
 
@@ -238,6 +323,8 @@ Upload Study Notes
 Generate Quiz
 ↓
 Practice & Self-Assessment
+
+---
 
 Lab Evaluator Workflow
 
@@ -256,7 +343,6 @@ Suggest Improvements
 Future Enhancements
 
 - AI-powered course recommendations.
-- Mock interview simulations.
 - Personalized career tracking dashboard.
 - Industry trend analysis.
 - Achievement and progress analytics.
@@ -275,4 +361,6 @@ Team
 
 Vision
 
-Our vision is to transform traditional resume analysis into a comprehensive AI-powered career navigation experience that not only shows users where they fall short, but also reveals the opportunities they already have, helps them prepare through intelligent assessments, improves their technical skills through code evaluation, and guides them toward achieving their dream careers.
+Our vision is to transform traditional resume analysis into a comprehensive AI-powered career navigation experience that not only shows users where they fall short but also reveals the opportunities they already have, helps them prepare through intelligent assessments, improves their technical and interview skills, and guides them toward achieving their dream careers.
+
+DISHA AI aims to become a one-stop platform for career discovery, preparation, and growth.
