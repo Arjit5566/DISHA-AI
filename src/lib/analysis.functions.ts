@@ -403,7 +403,7 @@ export const getAdzunaOpportunities = createServerFn({ method: "POST" })
             company: job.company?.display_name || "Confidential",
             location: job.location?.display_name || "Multiple Locations",
             salary: formatSalary(job.salary_min, job.salary_max, country),
-            redirectUrl: job.redirect_url,
+            redirectUrl: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(title + " " + (job.company?.display_name || ""))}`,
             created: job.created || new Date().toISOString(),
             matchScore: score,
             matchReason: reason,
@@ -424,7 +424,7 @@ export const getAdzunaOpportunities = createServerFn({ method: "POST" })
             company: intern.company?.display_name || "Confidential",
             location: intern.location?.display_name || "Multiple Locations",
             salary: formatSalary(intern.salary_min, intern.salary_max, country),
-            redirectUrl: intern.redirect_url,
+            redirectUrl: `https://www.indeed.com/jobs?q=${encodeURIComponent(title + " " + (intern.company?.display_name || ""))}`,
             created: intern.created || new Date().toISOString(),
             matchScore: score,
             matchReason: reason,
@@ -501,13 +501,14 @@ function generateMockOpportunities(
       matchReason = `Good alignment with your target role of ${targetRole}`;
     }
 
+    const comp = random(companyPool);
     opportunities.push({
       id: `mock-job-${idx}`,
       title,
-      company: random(companyPool),
+      company: comp,
       location: random(locations),
       salary: formatSalary(salaryMin, salaryMax, country),
-      redirectUrl: "https://www.adzuna.com",
+      redirectUrl: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(title + " " + comp)}`,
       created: new Date(Date.now() - idx * 24 * 60 * 60 * 1000).toISOString(),
       matchScore,
       matchReason,
@@ -535,13 +536,14 @@ function generateMockOpportunities(
       matchReason = `Perfect gateway role for ${targetRole}`;
     }
 
+    const comp = random(companyPool);
     opportunities.push({
       id: `mock-intern-${idx}`,
       title,
-      company: random(companyPool),
+      company: comp,
       location: random(locations),
       salary: formatSalary(salaryMin, salaryMax, country),
-      redirectUrl: "https://www.adzuna.com",
+      redirectUrl: `https://www.indeed.com/jobs?q=${encodeURIComponent(title + " " + comp)}`,
       created: new Date(Date.now() - (idx + 1) * 24 * 60 * 60 * 1000).toISOString(),
       matchScore,
       matchReason,

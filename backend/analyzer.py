@@ -299,6 +299,7 @@ def get_adzuna_opportunities(analysis_id):
 
     def generate_mock_opportunities():
         import random
+        import urllib.parse
         is_in = country == "in"
         company_pool = ["Tata Consultancy Services", "Infosys", "Wipro", "Razorpay", "Cred", "Swiggy", "Zomato", "Jio Platforms", "Flipkart"] if is_in else ["Google", "Meta", "Amazon", "Microsoft", "Stripe", "Netflix", "Atlassian", "Uber", "Airbnb"]
         locations = ["Bengaluru, Karnataka", "Mumbai, Maharashtra", "Hyderabad, Telangana", "Gurugram, Haryana", "Pune, Maharashtra", "Remote, India"] if is_in else ["San Francisco, CA", "Seattle, WA", "New York, NY", "Austin, TX", "London, UK", "Remote, US"]
@@ -318,13 +319,15 @@ def get_adzuna_opportunities(analysis_id):
             else:
                 reason = f"Good alignment with your target role of {target_role}"
                 
+            comp = random.choice(company_pool)
+            encoded_query = urllib.parse.quote(f"{title} {comp}")
             opps.append({
                 "id": f"mock-job-{idx}",
                 "title": title,
-                "company": random.choice(company_pool),
+                "company": comp,
                 "location": random.choice(locations),
                 "salary": format_salary(salary_min, salary_max, country),
-                "redirectUrl": "https://www.adzuna.com",
+                "redirectUrl": f"https://www.linkedin.com/jobs/search/?keywords={encoded_query}",
                 "created": datetime.datetime.utcnow().isoformat(),
                 "matchScore": score,
                 "matchReason": reason,
@@ -344,13 +347,15 @@ def get_adzuna_opportunities(analysis_id):
             else:
                 reason = f"Perfect gateway role for {target_role}"
                 
+            comp = random.choice(company_pool)
+            encoded_query = urllib.parse.quote(f"{title} {comp}")
             opps.append({
                 "id": f"mock-intern-{idx}",
                 "title": title,
-                "company": random.choice(company_pool),
+                "company": comp,
                 "location": random.choice(locations),
                 "salary": format_salary(salary_min, salary_max, country),
-                "redirectUrl": "https://www.adzuna.com",
+                "redirectUrl": f"https://www.indeed.com/jobs?q={encoded_query}",
                 "created": datetime.datetime.utcnow().isoformat(),
                 "matchScore": score,
                 "matchReason": reason,
@@ -377,19 +382,22 @@ def get_adzuna_opportunities(analysis_id):
         intern_data = intern_res.json() if intern_res.status_code == 200 else {"results": []}
         
         opportunities = []
+        import urllib.parse
         
         # Process jobs
         for job in jobs_data.get("results", []):
             title = clean_html(job.get("title"))
             desc = clean_html(job.get("description"))
+            company_name = job.get("company", {}).get("display_name") or "Confidential"
             score, reason = calculate_match(title, desc)
+            encoded_query = urllib.parse.quote(f"{title} {company_name}")
             opportunities.append({
                 "id": str(job.get("id")) or str(random.random()),
                 "title": title,
-                "company": job.get("company", {}).get("display_name") or "Confidential",
+                "company": company_name,
                 "location": job.get("location", {}).get("display_name") or "Multiple Locations",
                 "salary": format_salary(job.get("salary_min"), job.get("salary_max"), country),
-                "redirectUrl": job.get("redirect_url"),
+                "redirectUrl": f"https://www.linkedin.com/jobs/search/?keywords={encoded_query}",
                 "created": job.get("created") or datetime.datetime.utcnow().isoformat(),
                 "matchScore": score,
                 "matchReason": reason,
@@ -400,14 +408,16 @@ def get_adzuna_opportunities(analysis_id):
         for intern in intern_data.get("results", []):
             title = clean_html(intern.get("title"))
             desc = clean_html(intern.get("description"))
+            company_name = intern.get("company", {}).get("display_name") or "Confidential"
             score, reason = calculate_match(title, desc)
+            encoded_query = urllib.parse.quote(f"{title} {company_name}")
             opportunities.append({
                 "id": str(intern.get("id")) or str(random.random()),
                 "title": title,
-                "company": intern.get("company", {}).get("display_name") or "Confidential",
+                "company": company_name,
                 "location": intern.get("location", {}).get("display_name") or "Multiple Locations",
                 "salary": format_salary(intern.get("salary_min"), intern.get("salary_max"), country),
-                "redirectUrl": intern.get("redirect_url"),
+                "redirectUrl": f"https://www.indeed.com/jobs?q={encoded_query}",
                 "created": intern.get("created") or datetime.datetime.utcnow().isoformat(),
                 "matchScore": score,
                 "matchReason": reason,

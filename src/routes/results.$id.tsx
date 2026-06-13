@@ -86,11 +86,10 @@ function Results() {
           </div>
           <p className="text-primary mt-1 text-sm font-medium">{data.target_role}</p>
         </motion.div>
-        
-        {/* Right side 3D icon placeholder - matched from screenshot */}
+               {/* Right side 3D icon placeholder - matched from screenshot */}
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="hidden md:block relative h-24 w-24">
            <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.3),transparent_70%)] blur-2xl" />
-           <div className="relative h-full w-full rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md flex items-center justify-center rotate-12 transform shadow-xl">
+           <div className="relative h-full w-full rounded-2xl border border-border bg-card backdrop-blur-md flex items-center justify-center rotate-12 transform shadow-xl">
              <BarChart3 className="h-10 w-10 text-primary opacity-80" />
            </div>
         </motion.div>
@@ -102,7 +101,7 @@ function Results() {
       </motion.div>
 
       {/* Sleek Tab Bar */}
-      <div className="mb-8 flex border-b border-white/10 overflow-x-auto scrollbar-none">
+      <div className="mb-8 flex border-b border-border overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab("analysis")}
           className={`pb-4 px-6 text-sm font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
@@ -140,7 +139,7 @@ function Results() {
           <div className="grid gap-6 md:grid-cols-3">
             {/* Score */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-              className="glass-dark relative flex flex-col items-center rounded-3xl p-6 border border-primary/20 shadow-[0_0_30px_rgba(139,92,246,0.1)]">
+              className="card relative flex flex-col items-center rounded-3xl p-6 border border-primary/20 shadow-[0_0_30px_rgba(139,92,246,0.1)]">
               <div className="absolute left-6 top-6 flex items-center gap-2 text-sm font-bold text-foreground">
                 1. Career Readiness Score <Info className="h-4 w-4 text-muted-foreground" />
               </div>
@@ -156,7 +155,7 @@ function Results() {
 
             {/* Found Skills */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-              className="glass-dark rounded-3xl p-6 border border-success/20 shadow-[0_0_30px_rgba(16,185,129,0.05)] flex flex-col h-full">
+              className="card rounded-3xl p-6 border border-success/20 shadow-[0_0_30px_rgba(16,185,129,0.05)] flex flex-col h-full">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-sm font-bold text-foreground">2. Skills Found</h3>
                 <CheckCircle2 className="h-5 w-5 text-success" />
@@ -176,7 +175,7 @@ function Results() {
 
             {/* Missing Skills */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-              className="glass-dark rounded-3xl p-6 border border-destructive/20 shadow-[0_0_30px_rgba(239,68,68,0.05)] flex flex-col h-full">
+              className="card rounded-3xl p-6 border border-destructive/20 shadow-[0_0_30px_rgba(239,68,68,0.05)] flex flex-col h-full">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-sm font-bold text-foreground">3. Missing Skills</h3>
                 <AlertCircle className="h-5 w-5 text-destructive" />
@@ -197,7 +196,7 @@ function Results() {
 
           {/* Overview Row */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-            className="mt-6 glass-dark rounded-3xl p-6 border border-white/10">
+            className="mt-6 card rounded-3xl p-6 border border-border">
             <div className="mb-6 flex items-center gap-2 text-sm font-bold text-foreground">
               4. Skill Match Overview <Info className="h-4 w-4 text-muted-foreground" />
             </div>
@@ -227,7 +226,7 @@ function Results() {
               </div>
 
               {/* Target callout */}
-              <div className="flex items-center gap-4 rounded-2xl bg-white/5 p-6 border border-white/5">
+              <div className="flex items-center gap-4 rounded-2xl bg-muted/40 p-6 border border-border">
                 <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary/10 text-primary ring-1 ring-primary/30">
                   <Target className="h-6 w-6" />
                 </div>
@@ -243,7 +242,7 @@ function Results() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} 
             className="mt-8 flex flex-col items-center">
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-medium text-foreground transition-colors hover:bg-white/10">
+              <button className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 px-6 py-3.5 text-sm font-medium text-foreground transition-colors hover:bg-muted">
                 <FileText className="h-4 w-4" /> View Detailed Analysis
               </button>
               <Link to="/roadmap/$id" params={{ id }}
@@ -265,8 +264,8 @@ function Results() {
           transition={{ duration: 0.4 }}
         >
           {/* Country Selector & Sub-Tabs */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 bg-white/5 border border-white/10 rounded-3xl p-4">
-            <div className="flex items-center gap-2 bg-black/30 border border-white/15 rounded-2xl p-1 w-full sm:w-auto justify-between sm:justify-start">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 bg-muted/40 border border-border rounded-3xl p-4">
+            <div className="flex items-center gap-2 bg-background border border-border rounded-2xl p-1 w-full sm:w-auto justify-between sm:justify-start">
               <button
                 onClick={() => setSubTab("job")}
                 className={`px-5 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer ${
@@ -296,7 +295,7 @@ function Results() {
                 <select
                   value={selectedCountry}
                   onChange={(e) => setSelectedCountry(e.target.value)}
-                  className="bg-black/50 border border-white/15 rounded-2xl px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[160px]"
+                  className="bg-background border border-border rounded-2xl px-4 py-2.5 text-xs font-bold text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[160px]"
                 >
                   {/* Expanded country options for Adzuna API */}
                   <option value="in">🇮🇳 India (INR)</option>
@@ -331,7 +330,7 @@ function Results() {
                 <h4 className="text-sm font-bold text-amber-500">Demo Recommendations Mode</h4>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                   We are showing dynamic, high-fidelity suggestions customized to your target role and skills.
-                  To see real-time job and internship postings, add your <code className="bg-black/40 px-1.5 py-0.5 rounded text-amber-500 font-mono">ADZUNA_APP_ID</code> and <code className="bg-black/40 px-1.5 py-0.5 rounded text-amber-500 font-mono">ADZUNA_APP_KEY</code> to the <code className="bg-black/40 px-1.5 py-0.5 rounded text-amber-500 font-mono">.env</code> file.
+                  To see real-time job and internship postings, add your <code className="bg-muted px-1.5 py-0.5 rounded text-amber-500 font-mono">ADZUNA_APP_ID</code> and <code className="bg-muted px-1.5 py-0.5 rounded text-amber-500 font-mono">ADZUNA_APP_KEY</code> to the <code className="bg-muted px-1.5 py-0.5 rounded text-amber-500 font-mono">.env</code> file.
                 </p>
               </div>
             </motion.div>
@@ -341,19 +340,19 @@ function Results() {
           {loadingOpps && (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="glass-dark border border-white/5 rounded-3xl p-6 h-[250px] animate-pulse flex flex-col justify-between">
+                <div key={i} className="card border border-border rounded-3xl p-6 h-[250px] animate-pulse flex flex-col justify-between">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <div className="h-4 bg-white/10 rounded-md w-1/3" />
-                      <div className="h-6 bg-white/10 rounded-full w-20" />
+                      <div className="h-4 bg-muted rounded-md w-1/3" />
+                      <div className="h-6 bg-muted rounded-full w-20" />
                     </div>
-                    <div className="h-6 bg-white/10 rounded-md w-3/4" />
+                    <div className="h-6 bg-muted rounded-md w-3/4" />
                     <div className="space-y-2 mt-2">
-                      <div className="h-3 bg-white/10 rounded w-full" />
-                      <div className="h-3 bg-white/10 rounded w-5/6" />
+                      <div className="h-3 bg-muted rounded w-full" />
+                      <div className="h-3 bg-muted rounded w-5/6" />
                     </div>
                   </div>
-                  <div className="h-10 bg-white/10 rounded-xl w-full" />
+                  <div className="h-10 bg-muted rounded-xl w-full" />
                 </div>
               ))}
             </div>
@@ -361,7 +360,7 @@ function Results() {
 
           {/* Error State */}
           {oppsError && (
-            <div className="glass-dark border border-white/10 rounded-3xl p-12 text-center flex flex-col items-center">
+            <div className="card border border-border rounded-3xl p-12 text-center flex flex-col items-center">
               <AlertCircle className="h-12 w-12 text-destructive mb-4" />
               <h3 className="text-lg font-bold">Failed to load postings</h3>
               <p className="text-sm text-muted-foreground mt-1 mb-6 max-w-md">An error occurred while communicating with the Adzuna API search engine.</p>
@@ -382,7 +381,7 @@ function Results() {
                 
                 if (filtered.length === 0) {
                   return (
-                    <div className="glass-dark border border-white/10 rounded-3xl p-16 text-center">
+                    <div className="card border border-border rounded-3xl p-16 text-center">
                       <Briefcase className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-55" />
                       <h3 className="text-lg font-bold text-foreground">No matches in this region</h3>
                       <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
@@ -400,7 +399,7 @@ function Results() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="glass-dark border border-white/5 rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-primary/40 hover:shadow-[0_0_30px_rgba(139,92,246,0.1)] transition-all duration-300"
+                        className="card border border-border rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden group hover:border-primary/40 hover:shadow-[0_0_30px_rgba(139,92,246,0.1)] transition-all duration-300"
                       >
                         <div className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full pointer-events-none group-hover:from-primary/15 transition-all duration-300" />
                         
@@ -423,18 +422,18 @@ function Results() {
                               <MapPin className="h-4 w-4 text-muted-foreground/75" />
                               <span className="truncate">{opp.location}</span>
                             </div>
-                            <div className="flex items-center gap-2.5 text-xs text-white/90 font-bold">
+                            <div className="flex items-center gap-2.5 text-xs text-foreground/90 dark:text-white/90 font-bold">
                               <Building2 className="h-4 w-4 text-primary" />
                               <span>{opp.salary}</span>
                             </div>
                           </div>
 
-                          <p className="text-xs text-muted-foreground mt-5 line-clamp-2 bg-white/5 rounded-2xl p-4 border border-white/5 italic relative">
+                          <p className="text-xs text-muted-foreground mt-5 line-clamp-2 bg-muted/40 rounded-2xl p-4 border border-border italic relative">
                             {opp.matchReason}
                           </p>
                         </div>
 
-                        <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
+                        <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
                           <span className="text-[10px] text-muted-foreground font-semibold">
                             Posted {new Date(opp.created).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                           </span>
@@ -479,7 +478,7 @@ function ScoreRing({ score }: { score: number }) {
     <div className="relative grid h-40 w-40 place-items-center">
       <svg viewBox="0 0 200 200" className="-rotate-90">
         {/* Background track */}
-        <circle cx="100" cy="100" r={R} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="16" />
+        <circle cx="100" cy="100" r={R} fill="none" stroke="var(--border)" strokeWidth="16" />
         {/* Progress */}
         <motion.circle cx="100" cy="100" r={R} fill="none" stroke="url(#ringGrad2)" strokeLinecap="round" strokeWidth="16"
           strokeDasharray={C} initial={{ strokeDashoffset: C }} animate={{ strokeDashoffset: C * (1 - score / 100) }}
@@ -492,8 +491,8 @@ function ScoreRing({ score }: { score: number }) {
         </defs>
       </svg>
       <div className="absolute flex flex-col items-center">
-        <div className="text-4xl font-bold tabular-nums text-white">{score}</div>
-        <div className="text-sm font-medium text-white/50">/100</div>
+        <div className="text-4xl font-bold tabular-nums text-foreground">{score}</div>
+        <div className="text-sm font-medium text-muted-foreground">/100</div>
       </div>
     </div>
   );
@@ -710,8 +709,8 @@ function SuggestedResumeSection({
         </button>
       </div>
 
-      {/* Resume Preview Card — dark glassmorphism style to match the app */}
-      <div className="glass-dark rounded-3xl border border-white/10 overflow-hidden shadow-[0_0_60px_rgba(139,92,246,0.08)]">
+      {/* Resume Preview Card — theme compliant style to match the app */}
+      <div className="card rounded-3xl border border-border overflow-hidden shadow-[0_0_60px_rgba(139,92,246,0.08)]">
 
         {/* Accent Bar */}
         <div className="h-1.5 w-full bg-gradient-to-r from-primary via-accent to-primary" />
@@ -719,7 +718,7 @@ function SuggestedResumeSection({
         <div className="p-8 md:p-10 space-y-8">
 
           {/* ── Name & Role Header ── */}
-          <div className="border-b border-white/10 pb-6">
+          <div className="border-b border-border pb-6">
             <h3 className="text-3xl font-black text-foreground tracking-tight">{userName || "Your Name"}</h3>
             <p className="text-primary font-semibold text-lg mt-1">{targetRole}</p>
             <div className="flex flex-wrap gap-4 mt-3 text-xs text-muted-foreground">
@@ -776,13 +775,13 @@ function SuggestedResumeSection({
               <div className="h-1 w-1 rounded-full bg-primary" />
               <h4 className="text-xs font-bold text-primary uppercase tracking-widest">Professional Experience</h4>
             </div>
-            <div className="glass-dark rounded-2xl p-5 border border-white/5 space-y-3">
+            <div className="card rounded-2xl p-5 border border-border space-y-3 bg-muted/20">
               <div className="flex items-center justify-between">
                 <div>
                   <h5 className="text-sm font-bold text-foreground">{targetRole}</h5>
                   <p className="text-xs text-muted-foreground">[Company Name]</p>
                 </div>
-                <span className="text-[10px] text-muted-foreground font-semibold bg-white/5 px-3 py-1 rounded-full">[Start] — Present</span>
+                <span className="text-[10px] text-muted-foreground font-semibold bg-muted px-3 py-1 rounded-full">[Start] — Present</span>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
@@ -807,24 +806,24 @@ function SuggestedResumeSection({
               <div className="h-1 w-1 rounded-full bg-primary" />
               <h4 className="text-xs font-bold text-primary uppercase tracking-widest">Education</h4>
             </div>
-            <div className="glass-dark rounded-2xl p-5 border border-white/5">
+            <div className="card rounded-2xl p-5 border border-border bg-muted/20">
               <div className="flex items-center justify-between">
                 <div>
                   <h5 className="text-sm font-bold text-foreground">[Your Degree]</h5>
                   <p className="text-xs text-muted-foreground">[University Name]</p>
                 </div>
-                <span className="text-[10px] text-muted-foreground font-semibold bg-white/5 px-3 py-1 rounded-full">[Year]</span>
+                <span className="text-[10px] text-muted-foreground font-semibold bg-muted px-3 py-1 rounded-full">[Year]</span>
               </div>
             </div>
           </div>
 
-          {/* ── Projects Placeholder ── */}
+          {/* ── Key Projects Placeholder ── */}
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="h-1 w-1 rounded-full bg-primary" />
               <h4 className="text-xs font-bold text-primary uppercase tracking-widest">Key Projects</h4>
             </div>
-            <div className="glass-dark rounded-2xl p-5 border border-white/5 space-y-2">
+            <div className="card rounded-2xl p-5 border border-border space-y-2 bg-muted/20">
               <h5 className="text-sm font-bold text-foreground">[Project Name]</h5>
               <p className="text-sm text-muted-foreground flex items-start gap-2">
                 <Star className="h-3 w-3 text-primary mt-1 shrink-0" />
@@ -835,7 +834,7 @@ function SuggestedResumeSection({
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-4 border-t border-white/5 flex items-center justify-between">
+        <div className="px-8 py-4 border-t border-border flex items-center justify-between">
           <span className="text-[10px] text-muted-foreground">Generated by DISHA AI</span>
           <span className="text-[10px] text-muted-foreground">Readiness Score: <span className="text-primary font-bold">{score}/100</span></span>
         </div>
@@ -846,7 +845,7 @@ function SuggestedResumeSection({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="glass-dark rounded-2xl p-6 border border-primary/20 shadow-[0_0_30px_rgba(139,92,246,0.08)]"
+        className="card rounded-2xl p-6 border border-primary/20 shadow-[0_0_30px_rgba(139,92,246,0.08)]"
       >
         <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
           <Sparkles className="h-4 w-4 text-primary" /> Tips to Strengthen Your Resume

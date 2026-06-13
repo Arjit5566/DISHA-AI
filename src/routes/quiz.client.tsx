@@ -228,7 +228,7 @@ export default function QuizClient() {
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary mb-4">
                   <Brain className="h-3.5 w-3.5" /> Note-to-Quiz Engine
                 </div>
-                <h1 className="text-4xl font-bold md:text-5xl tracking-tight text-white leading-tight">
+                <h1 className="text-4xl font-bold md:text-5xl tracking-tight text-foreground leading-tight">
                   Intelligent <span className="gradient-text">Quiz AI</span>
                 </h1>
                 <p className="mt-3 text-sm text-muted-foreground max-w-xl mx-auto">
@@ -238,14 +238,14 @@ export default function QuizClient() {
 
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Inputs area */}
-                <div className="glass rounded-3xl p-6 space-y-4 flex flex-col justify-between">
+                <div className="card rounded-3xl p-6 space-y-4 flex flex-col justify-between">
                   <div className="space-y-4">
                     <div>
                       <label className="text-xs font-bold text-muted-foreground block mb-2">Subject Category</label>
                       <select 
                         value={subject} 
                         onChange={e => setSubject(e.target.value)}
-                        className="w-full bg-black/40 border border-border rounded-xl px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:border-primary"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:border-primary"
                       >
                         {SUBJECTS.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
@@ -256,7 +256,7 @@ export default function QuizClient() {
                       <select 
                         value={difficulty} 
                         onChange={e => setDifficulty(e.target.value)}
-                        className="w-full bg-black/40 border border-border rounded-xl px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:border-primary"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:border-primary"
                       >
                         {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
@@ -269,14 +269,14 @@ export default function QuizClient() {
                         onChange={e => setNotes(e.target.value)}
                         placeholder="Paste summaries, lecture nodes or code blocks here (min 15 chars)..."
                         disabled={!!file}
-                        className="w-full h-36 bg-black/40 border border-border rounded-xl p-4 text-xs outline-none focus:border-primary resize-none placeholder:text-muted-foreground disabled:opacity-50"
+                        className="w-full h-36 bg-background border border-border rounded-xl p-4 text-xs outline-none focus:border-primary resize-none placeholder:text-muted-foreground disabled:opacity-50"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* File Upload / Drag card */}
-                <div className="glass rounded-3xl p-6 flex flex-col justify-between">
+                <div className="card rounded-3xl p-6 flex flex-col justify-between">
                   <div>
                     <label className="text-xs font-bold text-muted-foreground block mb-2">Option B: Upload Slides / PDF Notes</label>
                     <div
@@ -284,11 +284,11 @@ export default function QuizClient() {
                       onDragLeave={() => setDragOver(false)}
                       onDrop={e => { e.preventDefault(); setDragOver(false); handleFileSelect(e.dataTransfer.files?.[0]); }}
                       onClick={() => fileInputRef.current?.click()}
-                      className={`cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all min-h-[170px] flex flex-col justify-center ${dragOver ? "border-primary bg-primary/5 scale-[1.01]" : "border-border bg-white/5 hover:border-primary/60"}`}
+                      className={`cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all min-h-[170px] flex flex-col justify-center ${dragOver ? "border-primary bg-primary/5 scale-[1.01]" : "border-border bg-muted/20 hover:border-primary/60"}`}
                     >
                       <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={e => handleFileSelect(e.target.files?.[0])} />
                       {file ? (
-                        <div className="flex items-center justify-between rounded-xl bg-white/5 p-3 text-left">
+                        <div className="flex items-center justify-between rounded-xl bg-muted p-3 text-left">
                           <div className="flex items-center gap-3 truncate">
                             <FileText className="h-5 w-5 text-primary shrink-0" />
                             <div className="min-w-0">
@@ -320,11 +320,11 @@ export default function QuizClient() {
 
               {/* History section */}
               {history.length > 0 && (
-                <div className="border-t border-white/5 pt-8">
+                <div className="border-t border-border pt-8">
                   <h3 className="text-sm font-bold text-muted-foreground mb-4">Past Quiz Performances</h3>
                   <div className="grid gap-3 sm:grid-cols-3">
                     {history.slice(0, 3).map((h: any) => (
-                      <div key={h.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex justify-between items-center">
+                      <div key={h.id} className="p-4 bg-muted border border-border rounded-2xl flex justify-between items-center">
                         <div className="min-w-0">
                           <h4 className="text-xs font-bold text-foreground truncate">{h.subject}</h4>
                           <span className="text-[10px] text-muted-foreground">{h.difficulty} Mode</span>
@@ -383,7 +383,7 @@ export default function QuizClient() {
               </div>
 
               {/* Progress bar */}
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-primary transition-all duration-300"
                   style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
@@ -391,7 +391,7 @@ export default function QuizClient() {
               </div>
 
               {/* Question Card */}
-              <div className="glass rounded-3xl p-6 border border-white/5 space-y-6">
+              <div className="card rounded-3xl p-6 space-y-6">
                 <h3 className="text-base font-bold text-foreground leading-relaxed">
                   {questions[currentIndex].question}
                 </h3>
@@ -402,11 +402,11 @@ export default function QuizClient() {
                     const isSelected = selectedOption === opt;
                     const isCorrect = opt === questions[currentIndex].answer;
                     
-                    let bgStyle = "bg-white/5 border-white/5 hover:border-primary/40 hover:bg-white/10";
+                    let bgStyle = "bg-muted/40 border-border hover:border-primary/40 hover:bg-muted/80";
                     if (hasAnswered) {
                       if (isCorrect) bgStyle = "bg-success/15 border-success/40 text-success font-bold";
                       else if (isSelected) bgStyle = "bg-destructive/15 border-destructive/40 text-destructive";
-                      else bgStyle = "bg-white/5 border-white/5 opacity-55";
+                      else bgStyle = "bg-muted/20 border-border opacity-55 text-muted-foreground";
                     }
 
                     return (
@@ -430,7 +430,7 @@ export default function QuizClient() {
                     <motion.div 
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
-                      className="bg-primary/5 border border-primary/10 rounded-xl p-4 text-[11px] text-white/80 leading-relaxed"
+                      className="bg-primary/5 border border-primary/10 rounded-xl p-4 text-[11px] text-foreground/80 dark:text-white/80 leading-relaxed"
                     >
                       <div className="flex gap-1.5 items-center font-bold text-primary mb-1">
                         <Lightbulb className="h-4 w-4" /> AI Explanation
@@ -467,7 +467,7 @@ export default function QuizClient() {
               className="space-y-6"
             >
               {/* Header card */}
-              <div className="glass rounded-3xl p-6 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="card rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div>
                   <div className="text-xs text-primary font-bold uppercase tracking-wider mb-1">Evaluation Completed</div>
                   <h2 className="text-2xl font-bold text-foreground">Score Summary: {subject}</h2>
@@ -487,7 +487,7 @@ export default function QuizClient() {
               {/* Grid block */}
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Accuracy details */}
-                <div className="glass rounded-3xl p-6 border border-white/5 flex flex-col justify-between">
+                <div className="card rounded-3xl p-6 flex flex-col justify-between">
                   <div>
                     <h3 className="text-sm font-bold text-foreground mb-4">Accuracy Breakdown</h3>
                     <div className="h-40 w-full">
@@ -507,7 +507,7 @@ export default function QuizClient() {
                 </div>
 
                 {/* Suggestions and Weak topics */}
-                <div className="glass rounded-3xl p-6 border border-white/5 space-y-6">
+                <div className="card rounded-3xl p-6 space-y-6">
                   <div>
                     <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-1.5">
                       <AlertTriangle className="h-4 w-4 text-warning" /> Weak Topics Detected
@@ -525,7 +525,7 @@ export default function QuizClient() {
                     <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-1.5">
                       <Lightbulb className="h-4 w-4 text-primary" /> Learning Action Plan
                     </h3>
-                    <ul className="text-xs space-y-2 text-white/70">
+                    <ul className="text-xs space-y-2 text-foreground/80 dark:text-white/70">
                       {suggestions.map((sug, i) => (
                         <li key={i} className="flex gap-2 items-start">
                           <Check className="h-4 w-4 text-success shrink-0 mt-0.5" />
@@ -541,7 +541,7 @@ export default function QuizClient() {
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setState("setup")}
-                  className="px-5 py-2.5 rounded-xl border border-white/10 text-xs font-bold text-muted-foreground hover:text-white transition-colors"
+                  className="px-5 py-2.5 rounded-xl border border-border text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
                   Create New Quiz
                 </button>

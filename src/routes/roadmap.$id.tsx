@@ -61,7 +61,7 @@ function Roadmap() {
 
       <div className="relative pl-24 md:pl-32 mb-16">
         {/* Vertical dotted line */}
-        <div className="absolute left-[84px] md:left-[116px] top-6 bottom-6 w-[2px] border-l-2 border-dashed border-white/10" />
+        <div className="absolute left-[84px] md:left-[116px] top-6 bottom-6 w-[2px] border-l-2 border-dashed border-border" />
 
         <div className="space-y-6">
           {roadmap.map((w, i) => {
@@ -73,7 +73,7 @@ function Roadmap() {
                 
                 {/* Left side label (Week 1) */}
                 <div className={`absolute left-[-80px] md:left-[-110px] w-16 md:w-20 text-right text-sm font-semibold ${theme.text}`}>
-                  <span className={`px-3 py-1 rounded-full border bg-black/20 ${theme.border}`}>Week {w.week}</span>
+                  <span className={`px-3 py-1 rounded-full border bg-muted ${theme.border}`}>Week {w.week}</span>
                 </div>
 
                 {/* Circle Node */}
@@ -82,7 +82,7 @@ function Roadmap() {
                 </div>
 
                 {/* Card */}
-                <div className={`flex-1 glass-dark rounded-3xl p-6 border ${theme.border} ${theme.shadow} flex flex-col md:flex-row gap-6 justify-between`}>
+                <div className={`flex-1 card rounded-3xl p-6 border ${theme.border} ${theme.shadow} flex flex-col md:flex-row gap-6 justify-between`}>
                   <div className="flex-1 space-y-4">
                     <div>
                       <h3 className="text-lg font-bold text-foreground">{w.title}</h3>
@@ -93,7 +93,7 @@ function Roadmap() {
                       <div>
                         <div className={`text-xs font-semibold mb-2 ${theme.text}`}>Outcomes</div>
                         <ul className="space-y-1.5 text-sm text-foreground/80">
-                          {w.outcomes?.length ? w.outcomes.slice(0, 3).map((o) => (
+                           {w.outcomes?.length ? w.outcomes.slice(0, 3).map((o) => (
                             <li key={o} className="flex gap-2 items-start">
                               <Check className={`h-4 w-4 shrink-0 mt-0.5 ${theme.text}`} /> {o}
                             </li>
@@ -145,7 +145,7 @@ function Roadmap() {
             
             return (
               <motion.div key={r.title + i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 + i * 0.1 }}
-                className={`flex flex-col glass-dark rounded-3xl p-5 border ${theme.border} ${theme.shadow} transition-transform hover:-translate-y-1`}>
+                className={`flex flex-col card rounded-3xl p-5 border ${theme.border} ${theme.shadow} transition-transform hover:-translate-y-1`}>
                 
                 <div className="flex items-start gap-4 mb-4">
                   <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-xl ${theme.bg} border ${theme.border}`}>

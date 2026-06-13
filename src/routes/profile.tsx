@@ -298,15 +298,15 @@ function Profile() {
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="bg-zinc-950 border border-white/10 p-6 rounded-3xl w-full max-w-lg shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden"
+                className="bg-card text-foreground border border-border p-6 rounded-3xl w-full max-w-lg shadow-[0_0_50px_rgba(0,0,0,0.3)] overflow-hidden"
               >
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                     <Pencil className="w-5 h-5 text-primary" /> Edit Profile Details
                   </h2>
                   <button 
                     onClick={() => setIsEditModalOpen(false)}
-                    className="p-1.5 hover:bg-white/10 rounded-full text-muted-foreground hover:text-white transition-colors"
+                    className="p-1.5 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <XIcon className="w-5 h-5" />
                   </button>
@@ -319,7 +319,7 @@ function Profile() {
                       type="text" 
                       value={formName} 
                       onChange={e => setFormName(e.target.value)} 
-                      className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary transition-colors"
+                      className="w-full bg-background border border-border rounded-xl p-3 text-xs outline-none text-foreground focus:border-primary transition-colors"
                     />
                   </div>
 
@@ -330,7 +330,7 @@ function Profile() {
                         type="text" 
                         value={formCareerGoal} 
                         onChange={e => setFormCareerGoal(e.target.value)} 
-                        className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary transition-colors"
+                        className="w-full bg-background border border-border rounded-xl p-3 text-xs outline-none text-foreground focus:border-primary transition-colors"
                       />
                     </div>
                     <div>
@@ -339,7 +339,7 @@ function Profile() {
                         type="text" 
                         value={formPreferredRole} 
                         onChange={e => setFormPreferredRole(e.target.value)} 
-                        className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary transition-colors"
+                        className="w-full bg-background border border-border rounded-xl p-3 text-xs outline-none text-foreground focus:border-primary transition-colors"
                       />
                     </div>
                   </div>
@@ -352,7 +352,7 @@ function Profile() {
                         value={formLinkedIn} 
                         onChange={e => setFormLinkedIn(e.target.value)} 
                         placeholder="https://linkedin.com/in/username"
-                        className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary transition-colors"
+                        className="w-full bg-background border border-border rounded-xl p-3 text-xs outline-none text-foreground focus:border-primary transition-colors"
                       />
                     </div>
                     <div>
@@ -362,7 +362,7 @@ function Profile() {
                         value={formGitHub} 
                         onChange={e => setFormGitHub(e.target.value)} 
                         placeholder="https://github.com/username"
-                        className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary transition-colors"
+                        className="w-full bg-background border border-border rounded-xl p-3 text-xs outline-none text-foreground focus:border-primary transition-colors"
                       />
                     </div>
                   </div>
@@ -374,16 +374,16 @@ function Profile() {
                       onChange={e => setFormSkillsText(e.target.value)} 
                       placeholder="React, Node.js, Python, AWS"
                       rows={3}
-                      className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary resize-none transition-colors"
+                      className="w-full bg-background border border-border rounded-xl p-3 text-xs outline-none text-foreground resize-none transition-colors"
                     />
                     <span className="text-[10px] text-muted-foreground mt-1 block">Separate skills with commas. Empty entries are ignored.</span>
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/5">
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
                   <button 
                     onClick={() => setIsEditModalOpen(false)} 
-                    className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-white transition-colors"
+                    className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
                     disabled={isSaving}
                   >
                     Cancel
@@ -414,8 +414,8 @@ function Profile() {
         {/* Top Grid: Personal Details & Performance Metrics */}
         <div className="grid gap-6 md:grid-cols-3">
           
-          {/* Card 1: Personal Details (Redesigned with large avatar & glowing neon effects) */}
-          <div className="glass-dark rounded-3xl p-6 border border-white/5 md:col-span-1 flex flex-col justify-between relative overflow-hidden group shadow-[0_4px_30px_rgba(0,0,0,0.2)]">
+          {/* Card 1: Personal Details */}
+          <div className="card rounded-3xl p-6 md:col-span-1 flex flex-col justify-between relative overflow-hidden group shadow-[0_4px_30px_rgba(0,0,0,0.05)]">
             
             {/* Glowing ambient background inside the card */}
             <div className="absolute -right-20 -top-20 w-44 h-44 rounded-full bg-primary/10 blur-[50px] pointer-events-none group-hover:bg-primary/15 transition-all duration-500" />
@@ -425,7 +425,7 @@ function Profile() {
                 <h3 className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Candidate Details</h3>
                 <button 
                   onClick={openEditModal}
-                  className="p-1.5 rounded-lg bg-white/5 hover:bg-primary/20 text-muted-foreground hover:text-primary border border-white/5 hover:border-primary/30 transition-all"
+                  className="p-1.5 rounded-lg bg-muted hover:bg-primary/20 text-muted-foreground hover:text-primary border border-border hover:border-primary/30 transition-all"
                   title="Edit Profile details"
                 >
                   <Pencil className="w-3.5 h-3.5" />
@@ -447,19 +447,19 @@ function Profile() {
                   <button 
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="absolute bottom-1 right-1 bg-zinc-950/90 hover:bg-primary border border-white/10 text-white rounded-full p-2 shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center"
+                    className="absolute bottom-1 right-1 bg-background hover:bg-primary border border-border text-foreground hover:text-white rounded-full p-2 shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center"
                     title="Change Profile Photo"
                   >
                     {isUploading ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <Loader2 className="w-4 h-4 animate-spin text-foreground hover:text-white" />
                     ) : (
-                      <Camera className="w-4 h-4 text-white" />
+                      <Camera className="w-4 h-4 text-foreground group-hover:text-white" />
                     )}
                   </button>
                 </div>
                 
                 <div className="max-w-full px-2">
-                  <h2 className="text-xl font-bold text-white tracking-tight leading-tight">{fullName}</h2>
+                  <h2 className="text-xl font-bold text-foreground tracking-tight leading-tight">{fullName}</h2>
                   <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground mt-1 truncate">
                     <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
                     <span className="truncate">{user?.email}</span>
@@ -468,15 +468,15 @@ function Profile() {
               </div>
 
               {/* Profile Details List */}
-              <div className="space-y-4 pt-5 border-t border-white/5">
+              <div className="space-y-4 pt-5 border-t border-border">
                 <div className="flex flex-col gap-1">
                   <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Career Goal</span>
-                  <span className="text-xs font-semibold text-white/90">{careerGoal}</span>
+                  <span className="text-xs font-semibold text-foreground/90">{careerGoal}</span>
                 </div>
 
                 <div className="flex flex-col gap-1">
                   <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Preferred Role</span>
-                  <span className="text-xs font-semibold text-white/90">{preferredRole}</span>
+                  <span className="text-xs font-semibold text-foreground/90">{preferredRole}</span>
                 </div>
 
                 {/* Social Links */}
@@ -491,7 +491,7 @@ function Profile() {
                       <Linkedin className="h-3.5 w-3.5" /> LinkedIn
                     </a>
                   ) : (
-                    <span className="px-3 py-1.5 bg-white/5 border border-white/5 rounded-xl text-[10px] text-muted-foreground font-semibold">No LinkedIn</span>
+                    <span className="px-3 py-1.5 bg-muted border border-border rounded-xl text-[10px] text-muted-foreground font-semibold">No LinkedIn</span>
                   )}
 
                   {github ? (
@@ -499,12 +499,12 @@ function Profile() {
                       href={github.startsWith("http") ? github : `https://${github}`} 
                       target="_blank" 
                       rel="noreferrer" 
-                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-white transition-colors"
+                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 border border-border rounded-xl text-[10px] font-bold text-foreground transition-colors"
                     >
                       <Github className="h-3.5 w-3.5" /> GitHub
                     </a>
                   ) : (
-                    <span className="px-3 py-1.5 bg-white/5 border border-white/5 rounded-xl text-[10px] text-muted-foreground font-semibold">No GitHub</span>
+                    <span className="px-3 py-1.5 bg-muted border border-border rounded-xl text-[10px] text-muted-foreground font-semibold">No GitHub</span>
                   )}
                 </div>
 
@@ -524,41 +524,41 @@ function Profile() {
               </div>
             </div>
 
-            <div className="text-[9px] text-muted-foreground mt-6 pt-3 border-t border-white/5 text-center">
+            <div className="text-[9px] text-muted-foreground mt-6 pt-3 border-t border-border text-center">
               Configure details or change your profile photo to personalize Disha AI.
             </div>
           </div>
 
           {/* Card 2: Performance Statistics */}
-          <div className="glass-dark rounded-3xl p-6 border border-white/5 md:col-span-2 space-y-6 flex flex-col justify-between">
+          <div className="card rounded-3xl p-6 md:col-span-2 space-y-6 flex flex-col justify-between">
             <div>
               <h3 className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-4">Growth Statistics</h3>
               
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 
                 {/* Stat 1: Resume Score */}
-                <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center hover:border-primary/30 transition-colors">
+                <div className="p-4 bg-muted/40 border border-border rounded-2xl text-center hover:border-primary/30 transition-colors">
                   <Award className="h-5 w-5 text-primary mx-auto mb-2" />
                   <div className="text-xl font-extrabold text-foreground">{latestResumeScore}%</div>
                   <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">Resume Fit</div>
                 </div>
 
                 {/* Stat 2: ATS Score */}
-                <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center hover:border-cyan-400/30 transition-colors">
+                <div className="p-4 bg-muted/40 border border-border rounded-2xl text-center hover:border-cyan-400/30 transition-colors">
                   <FileCheck className="h-5 w-5 text-cyan-400 mx-auto mb-2" />
                   <div className="text-xl font-extrabold text-foreground">{latestAtsScore}%</div>
                   <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">ATS Match</div>
                 </div>
 
                 {/* Stat 3: Quiz Score */}
-                <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center hover:border-pink-400/30 transition-colors">
+                <div className="p-4 bg-muted/40 border border-border rounded-2xl text-center hover:border-pink-400/30 transition-colors">
                   <Brain className="h-5 w-5 text-pink-400 mx-auto mb-2" />
                   <div className="text-xl font-extrabold text-foreground">{avgQuizScore}%</div>
                   <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">Avg Quiz</div>
                 </div>
 
                 {/* Stat 4: Lab Score */}
-                <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center hover:border-purple-400/30 transition-colors">
+                <div className="p-4 bg-muted/40 border border-border rounded-2xl text-center hover:border-purple-400/30 transition-colors">
                   <Database className="h-5 w-5 text-purple-400 mx-auto mb-2" />
                   <div className="text-xl font-extrabold text-foreground">{avgLabScore}%</div>
                   <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">Avg Lab</div>
@@ -578,7 +578,7 @@ function Profile() {
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chart} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(99,102,241,0.08)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                       <XAxis dataKey="name" stroke="#94a3b8" fontSize={9} />
                       <YAxis domain={[0, 100]} stroke="#94a3b8" fontSize={9} />
                       <Tooltip />
@@ -597,7 +597,7 @@ function Profile() {
         <div className="grid gap-6 md:grid-cols-2">
           
           {/* Achievements & Badges */}
-          <div className="glass-dark rounded-3xl p-6 border border-white/5 space-y-4">
+          <div className="card rounded-3xl p-6 space-y-4">
             <h3 className="text-sm font-bold text-foreground">Achievements & Badges</h3>
             
             <div className="space-y-3">
@@ -606,10 +606,10 @@ function Profile() {
                 return (
                   <div 
                     key={b.name} 
-                    className={`flex items-center justify-between border rounded-2xl p-3.5 transition-all ${b.earned ? b.color : "opacity-35 border-white/5 bg-white/2"}`}
+                    className={`flex items-center justify-between border rounded-2xl p-3.5 transition-all ${b.earned ? b.color : "opacity-35 border-border bg-muted/20"}`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="grid h-8 w-8 place-items-center rounded-xl bg-black/20">
+                      <div className="grid h-8 w-8 place-items-center rounded-xl bg-muted/60">
                         <Icon className="h-4 w-4" />
                       </div>
                       <div>
@@ -622,7 +622,7 @@ function Profile() {
                       {b.earned ? (
                         <span className="flex items-center gap-1"><Check className="h-3 w-3" /> Earned</span>
                       ) : (
-                        <span className="text-white/40">Locked</span>
+                        <span className="text-muted-foreground/60">Locked</span>
                       )}
                     </div>
                   </div>
@@ -632,21 +632,21 @@ function Profile() {
           </div>
 
           {/* Learning Journey Timeline */}
-          <div className="glass-dark rounded-3xl p-6 border border-white/5 space-y-4">
+          <div className="card rounded-3xl p-6 space-y-4">
             <h3 className="text-sm font-bold text-foreground">Learning Journey</h3>
             
             <div className="relative pl-6 py-1">
-              <div className="absolute left-[9px] top-4 bottom-4 w-[1px] border-l border-dashed border-white/10" />
+              <div className="absolute left-[9px] top-4 bottom-4 w-[1px] border-l border-dashed border-border" />
               
               <div className="space-y-4">
                 {journeySteps.map((step, idx) => (
                   <div key={idx} className="relative flex gap-3.5">
                     
                     {/* Circle Dot indicator */}
-                    <div className={`absolute left-[-22px] top-0.5 h-3 w-3 rounded-full border ${step.completed ? "bg-success border-success" : "bg-black border-white/20"}`} />
+                    <div className={`absolute left-[-22px] top-0.5 h-3 w-3 rounded-full border ${step.completed ? "bg-success border-success" : "bg-background border-border"}`} />
 
                     <div className="min-w-0">
-                      <h4 className={`text-xs font-bold ${step.completed ? "text-foreground" : "text-white/40"}`}>{step.title}</h4>
+                      <h4 className={`text-xs font-bold ${step.completed ? "text-foreground" : "text-muted-foreground/50"}`}>{step.title}</h4>
                       <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{step.desc}</p>
                     </div>
 
@@ -659,7 +659,7 @@ function Profile() {
         </div>
 
         {/* Historical Records of Resume Evaluations */}
-        <div className="glass-dark rounded-3xl p-6 border border-white/5">
+        <div className="card rounded-3xl p-6">
           <h3 className="text-sm font-bold text-foreground mb-4">Historical Resume Evaluations</h3>
           {loadingAnalyses ? (
             <div className="flex py-6 justify-center">
@@ -670,11 +670,11 @@ function Profile() {
               No evaluations found. <Link to="/dashboard" className="text-primary hover:underline">Run your first analysis →</Link>
             </p>
           ) : (
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-border">
               {(analyses ?? []).map((a) => (
                 <div key={a.id} className="flex items-center justify-between gap-4 py-3 text-xs">
                   <div>
-                    <div className="font-bold text-white">{a.target_role}</div>
+                    <div className="font-bold text-foreground">{a.target_role}</div>
                     <div className="text-[10px] text-muted-foreground mt-0.5">{new Date(a.created_at).toLocaleString()}</div>
                   </div>
                   
@@ -687,7 +687,7 @@ function Profile() {
                     <Link 
                       to="/dashboard" 
                       search={{ id: a.id }} 
-                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold text-muted-foreground hover:text-white transition-colors"
+                      className="rounded-full border border-border bg-muted px-3 py-1.5 text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors"
                     >
                       View
                     </Link>

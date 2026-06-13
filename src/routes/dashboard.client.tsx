@@ -142,12 +142,12 @@ export default function Dashboard() {
             className="space-y-8"
           >
             {/* Header / Meta */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border pb-6">
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   <button 
                     onClick={handleReset} 
-                    className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-full border border-white/5"
+                    className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors bg-muted px-3 py-1.5 rounded-full border border-border"
                   >
                     <ArrowLeft className="h-3 w-3" /> Re-analyze New Resume
                   </button>
@@ -178,7 +178,7 @@ export default function Dashboard() {
               {/* Card 1: Resume Readiness Score */}
               <motion.div 
                 whileHover={{ y: -4 }} 
-                className="glass-dark rounded-3xl p-6 border border-primary/20 shadow-[0_0_20px_rgba(139,92,246,0.1)] flex flex-col items-center text-center justify-between"
+                className="card rounded-3xl p-6 border border-primary/20 shadow-[0_0_20px_rgba(139,92,246,0.1)] flex flex-col items-center text-center justify-between"
               >
                 <div className="w-full flex items-center justify-between text-xs text-muted-foreground font-semibold mb-2">
                   <span>Readiness Score</span>
@@ -200,7 +200,7 @@ export default function Dashboard() {
                 return (
                   <motion.div 
                     whileHover={{ y: -4 }} 
-                    className="glass-dark rounded-3xl p-6 border border-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.1)] flex flex-col items-center text-center justify-between"
+                    className="card rounded-3xl p-6 border border-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.1)] flex flex-col items-center text-center justify-between"
                   >
                     <div className="w-full flex items-center justify-between text-xs text-muted-foreground font-semibold mb-2">
                       <span>ATS Score</span>
@@ -220,7 +220,7 @@ export default function Dashboard() {
               {/* Card 3: Skills Found Card */}
               <motion.div 
                 whileHover={{ y: -4 }} 
-                className="glass-dark rounded-3xl p-6 border border-success/20 shadow-[0_0_20px_rgba(16,185,129,0.05)] md:col-span-1 flex flex-col justify-between"
+                className="card rounded-3xl p-6 border border-success/20 shadow-[0_0_20px_rgba(16,185,129,0.05)] md:col-span-1 flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -237,7 +237,7 @@ export default function Dashboard() {
                     ))}
                   </div>
                 </div>
-                <div className="text-[10px] text-muted-foreground mt-4 pt-2 border-t border-white/5">
+                <div className="text-[10px] text-muted-foreground mt-4 pt-2 border-t border-border">
                   Detected in parsed sections
                 </div>
               </motion.div>
@@ -245,7 +245,7 @@ export default function Dashboard() {
               {/* Card 4: Missing Skills Card */}
               <motion.div 
                 whileHover={{ y: -4 }} 
-                className="glass-dark rounded-3xl p-6 border border-destructive/20 shadow-[0_0_20px_rgba(239,68,68,0.05)] md:col-span-1 flex flex-col justify-between"
+                className="card rounded-3xl p-6 border border-destructive/20 shadow-[0_0_20px_rgba(239,68,68,0.05)] md:col-span-1 flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -262,7 +262,7 @@ export default function Dashboard() {
                     ))}
                   </div>
                 </div>
-                <div className="text-[10px] text-muted-foreground mt-4 pt-2 border-t border-white/5">
+                <div className="text-[10px] text-muted-foreground mt-4 pt-2 border-t border-border">
                   Required keywords to prioritize
                 </div>
               </motion.div>
@@ -273,7 +273,7 @@ export default function Dashboard() {
             <div className="grid gap-6 md:grid-cols-2">
               
               {/* Skills Gap Analysis */}
-              <div className="glass-dark rounded-3xl p-6 border border-white/5">
+              <div className="card rounded-3xl p-6 border border-border">
                 <div className="flex items-center gap-2 mb-4">
                   <Database className="h-5 w-5 text-primary" />
                   <h3 className="text-base font-bold">Skills Gap Analysis</h3>
@@ -286,7 +286,7 @@ export default function Dashboard() {
                 <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
                   {/* Found matches */}
                   {Array.isArray(analysis.extracted_skills) && (analysis.extracted_skills as string[]).map((s) => (
-                    <div key={s} className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-2.5 border border-white/5">
+                    <div key={s} className="flex items-center justify-between bg-muted/45 rounded-xl px-4 py-2.5 border border-border">
                       <div className="flex items-center gap-3">
                         <div className="grid h-6 w-6 place-items-center rounded-lg bg-success/10 text-success">
                           {getSkillIcon(s)}
@@ -301,12 +301,12 @@ export default function Dashboard() {
 
                   {/* Missing skills */}
                   {Array.isArray(analysis.missing_skills) && (analysis.missing_skills as string[]).map((s, i) => (
-                    <div key={i} className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-2.5 border border-white/5">
+                    <div key={i} className="flex items-center justify-between bg-muted/45 rounded-xl px-4 py-2.5 border border-border">
                       <div className="flex items-center gap-3">
                         <div className="grid h-6 w-6 place-items-center rounded-lg bg-destructive/10 text-destructive">
                           {getSkillIcon(s)}
                         </div>
-                        <span className="text-xs font-medium text-white/70">{s}</span>
+                        <span className="text-xs font-medium text-foreground/70 dark:text-white/70">{s}</span>
                       </div>
                       <span className="text-[10px] text-destructive font-semibold flex items-center gap-1">
                         <X className="h-3.5 w-3.5" /> Missing
@@ -317,7 +317,7 @@ export default function Dashboard() {
               </div>
 
               {/* ATS Compatibility */}
-              <div className="glass-dark rounded-3xl p-6 border border-white/5">
+              <div className="card rounded-3xl p-6 border border-border">
                 <div className="flex items-center gap-2 mb-4">
                   <FileText className="h-5 w-5 text-cyan-400" />
                   <h3 className="text-base font-bold">ATS Compatibility</h3>
@@ -343,7 +343,7 @@ export default function Dashboard() {
             <div className="grid gap-6 md:grid-cols-3">
               
               {/* Resume Insights (left col) */}
-              <div className="glass-dark rounded-3xl p-6 border border-white/5 md:col-span-1 flex flex-col justify-between">
+              <div className="card rounded-3xl p-6 border border-border md:col-span-1 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-4">
                     <Terminal className="h-5 w-5 text-secondary" />
@@ -357,7 +357,7 @@ export default function Dashboard() {
                   <div className="space-y-4">
                     <div>
                       <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Strengths</div>
-                      <ul className="text-xs mt-1.5 space-y-1 text-white/90">
+                      <ul className="text-xs mt-1.5 space-y-1 text-foreground/90 dark:text-white/90">
                         <li className="flex gap-1.5 items-start"><Check className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" /> High volume of core developer keywords</li>
                         <li className="flex gap-1.5 items-start"><Check className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" /> Clean workspace chronology layout</li>
                       </ul>
@@ -365,7 +365,7 @@ export default function Dashboard() {
 
                     <div>
                       <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Weaknesses & Recommendations</div>
-                      <ul className="text-xs mt-1.5 space-y-1.5 text-white/70">
+                      <ul className="text-xs mt-1.5 space-y-1.5 text-foreground/80 dark:text-white/70">
                         <li className="flex gap-1.5 items-start"><X className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" /> Lack of metrics-oriented outcomes</li>
                         <li className="flex gap-1.5 items-start"><X className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" /> Missing technical skills like: {Array.isArray(analysis.missing_skills) ? analysis.missing_skills.slice(0, 2).join(", ") : "N/A"}</li>
                       </ul>
@@ -373,13 +373,13 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/5 text-[10px] text-muted-foreground italic">
+                <div className="mt-6 pt-4 border-t border-border text-[10px] text-muted-foreground italic">
                   Tip: Expand the roadmap below to learn missing skills.
                 </div>
               </div>
 
               {/* Learning Recommendations (right col - spanning 2) */}
-              <div className="glass-dark rounded-3xl p-6 border border-white/5 md:col-span-2">
+              <div className="card rounded-3xl p-6 border border-border md:col-span-2">
                 <div className="flex items-center gap-2 mb-4">
                   <BookOpen className="h-5 w-5 text-primary" />
                   <h3 className="text-base font-bold">Learning Recommendations</h3>
@@ -397,7 +397,7 @@ export default function Dashboard() {
                       <motion.div 
                         key={idx} 
                         whileHover={{ y: -3 }}
-                        className="bg-white/5 border border-white/5 rounded-2xl p-4 flex flex-col justify-between"
+                        className="bg-muted/40 border border-border rounded-2xl p-4 flex flex-col justify-between"
                       >
                         <div>
                           <div className="flex items-center justify-between mb-2">
@@ -410,7 +410,7 @@ export default function Dashboard() {
                           <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">Master {r.skill} with interactive projects and lectures.</p>
                         </div>
 
-                        <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                        <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
                           <span className="text-[10px] text-muted-foreground">Self-Paced</span>
                           <a 
                             href={r.url} 
@@ -430,7 +430,7 @@ export default function Dashboard() {
             </div>
 
             {/* Career Roadmap Timeline */}
-            <div className="glass-dark rounded-3xl p-6 border border-white/5">
+            <div className="card rounded-3xl p-6 border border-border">
               <div className="flex items-center gap-2 mb-6">
                 <Target className="h-5 w-5 text-primary" />
                 <h3 className="text-base font-bold">Career Roadmap</h3>
@@ -442,7 +442,7 @@ export default function Dashboard() {
 
               <div className="relative pl-12 sm:pl-20 py-2">
                 {/* Vertical Line */}
-                <div className="absolute left-[34px] sm:left-[50px] top-6 bottom-6 w-[1px] border-l border-dashed border-white/10" />
+                <div className="absolute left-[34px] sm:left-[50px] top-6 bottom-6 w-[1px] border-l border-dashed border-border" />
 
                 <div className="space-y-6">
                   {Array.isArray(analysis.roadmap) && analysis.roadmap.map((w: any, i: number) => {
@@ -458,12 +458,12 @@ export default function Dashboard() {
                         className="relative flex gap-4 sm:gap-6"
                       >
                         {/* Dot indicator */}
-                        <div className="absolute left-[-26px] sm:left-[-38px] top-0 grid h-8 w-8 place-items-center rounded-full bg-background border-2 border-white/10 ring-1" style={{ borderColor: theme.color }}>
+                        <div className="absolute left-[-26px] sm:left-[-38px] top-0 grid h-8 w-8 place-items-center rounded-full bg-background border-2 border-border ring-1" style={{ borderColor: theme.color }}>
                           <span className="text-[10px] font-bold" style={{ color: theme.color }}>0{w.week}</span>
                         </div>
 
                         {/* Card Content */}
-                        <div className="flex-1 bg-white/5 border border-white/5 rounded-2xl p-5 hover:border-primary/20 transition-colors">
+                        <div className="flex-1 bg-muted/40 border border-border rounded-2xl p-5 hover:border-primary/20 transition-colors">
                           <div className="flex items-start justify-between gap-4">
                             <div>
                               <span className="text-[9px] uppercase tracking-wider font-bold" style={{ color: theme.color }}>Week {w.week}</span>
@@ -474,7 +474,7 @@ export default function Dashboard() {
                           <div className="mt-4 grid gap-4 sm:grid-cols-2">
                             <div>
                               <div className="text-[10px] text-muted-foreground uppercase font-bold">Objectives</div>
-                              <ul className="text-xs mt-1.5 space-y-1 text-white/70">
+                              <ul className="text-xs mt-1.5 space-y-1 text-foreground/85 dark:text-white/70">
                                 {Array.isArray(w.objectives) && w.objectives.map((o: string, idx: number) => (
                                   <li key={idx} className="flex gap-1.5 items-start">
                                     <Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
@@ -486,7 +486,7 @@ export default function Dashboard() {
 
                             <div>
                               <div className="text-[10px] text-muted-foreground uppercase font-bold">Learning Outcomes</div>
-                              <ul className="text-xs mt-1.5 space-y-1 text-white/70">
+                              <ul className="text-xs mt-1.5 space-y-1 text-foreground/85 dark:text-white/70">
                                 {Array.isArray(w.outcomes) && w.outcomes.map((out: string, idx: number) => (
                                   <li key={idx} className="flex gap-1.5 items-start">
                                     <Check className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" />
@@ -522,7 +522,7 @@ export default function Dashboard() {
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary mb-4">
                 <Sparkles className="h-3.5 w-3.5" /> Premium AI Career Readiness Platform
               </div>
-              <h1 className="text-4xl font-bold md:text-5xl tracking-tight text-white leading-tight">
+              <h1 className="text-4xl font-bold md:text-5xl tracking-tight text-foreground leading-tight">
                 Welcome to <span className="gradient-text">Disha AI</span>
               </h1>
               <p className="mt-3 text-base text-muted-foreground max-w-xl mx-auto">
@@ -538,7 +538,7 @@ export default function Dashboard() {
                 initial={{ opacity: 0, x: -20 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ delay: 0.1, duration: 0.6 }} 
-                className="glass rounded-3xl p-6 flex flex-col justify-between"
+                className="card rounded-3xl p-6 flex flex-col justify-between"
               >
                 <div>
                   <div className="mb-2 flex items-center gap-2 text-base font-bold text-foreground">
@@ -551,11 +551,11 @@ export default function Dashboard() {
                     onDragLeave={() => setDragOver(false)}
                     onDrop={e => { e.preventDefault(); setDragOver(false); pickFile(e.dataTransfer.files?.[0]); }}
                     onClick={() => inputRef.current?.click()}
-                    className={`group relative cursor-pointer rounded-2xl border-2 border-dashed p-10 text-center transition-all min-h-[190px] flex flex-col justify-center ${dragOver ? "border-primary bg-primary/5 scale-[1.01]" : "border-border bg-white/5 hover:border-primary/60 hover:bg-white/10"}`}
+                    className={`group relative cursor-pointer rounded-2xl border-2 border-dashed p-10 text-center transition-all min-h-[190px] flex flex-col justify-center ${dragOver ? "border-primary bg-primary/5 scale-[1.01]" : "border-border bg-muted/20 hover:border-primary/60"}`}
                   >
                     <input ref={inputRef} type="file" accept="application/pdf" className="hidden" onChange={e => pickFile(e.target.files?.[0])} />
                     {file ? (
-                      <div className="flex items-center justify-between rounded-xl bg-white/5 p-3 text-left">
+                      <div className="flex items-center justify-between rounded-xl bg-muted p-3 text-left">
                         <div className="flex items-center gap-3 truncate">
                           <CheckCircle2 className="h-5 w-5 shrink-0 text-success" />
                           <div className="min-w-0">
@@ -590,7 +590,7 @@ export default function Dashboard() {
                 initial={{ opacity: 0, x: 20 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ delay: 0.2, duration: 0.6 }} 
-                className="glass rounded-3xl p-6 flex flex-col justify-between"
+                className="card rounded-3xl p-6 flex flex-col justify-between"
               >
                 <div>
                   <div className="mb-2 flex items-center gap-2 text-base font-bold text-foreground">
@@ -602,7 +602,7 @@ export default function Dashboard() {
                     <button 
                       type="button" 
                       onClick={() => setOpen(v => !v)} 
-                      className="flex w-full items-center justify-between rounded-xl border border-border bg-black/40 px-4 py-3 text-left text-xs font-bold hover:bg-black/50"
+                      className="flex w-full items-center justify-between rounded-xl border border-border bg-background px-4 py-3 text-left text-xs font-bold hover:bg-muted"
                     >
                       {role}
                       <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
@@ -631,7 +631,7 @@ export default function Dashboard() {
                       value={custom} 
                       onChange={e => setCustom(e.target.value)} 
                       placeholder="e.g. ML Research Engineer" 
-                      className="mt-3 w-full rounded-xl border border-border bg-black/40 px-4 py-3 text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary/20" 
+                      className="mt-3 w-full rounded-xl border border-border bg-background px-4 py-3 text-xs outline-none focus:border-primary focus:ring-1 focus:ring-primary/20" 
                     />
                   )}
                 </div>
@@ -672,7 +672,7 @@ export default function Dashboard() {
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }} 
                 transition={{ delay: 0.4 }} 
-                className="mt-12 border-t border-white/5 pt-8"
+                className="mt-12 border-t border-border pt-8"
               >
                 <h3 className="text-sm font-bold text-muted-foreground mb-4">Your Recent Evaluations</h3>
                 <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
@@ -681,7 +681,7 @@ export default function Dashboard() {
                       key={hist.id} 
                       to="/results/$id"
                       params={{ id: hist.id }}
-                      className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-primary/30 transition-all cursor-pointer flex justify-between items-center group text-left"
+                      className="p-4 bg-muted border border-border rounded-2xl hover:border-primary/30 transition-all cursor-pointer flex justify-between items-center group text-left"
                     >
                       <div className="min-w-0">
                         <h4 className="text-xs font-bold text-foreground truncate">{hist.target_role}</h4>
@@ -712,7 +712,7 @@ export default function Dashboard() {
 // ATS Check Row
 function AtsCheckRow({ label, status, details }: { label: string; status: "pass" | "warn"; details: string }) {
   return (
-    <div className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-2.5 border border-white/5 text-xs">
+    <div className="flex items-center justify-between bg-muted/40 rounded-xl px-4 py-2.5 border border-border text-xs">
       <div className="flex items-center gap-2.5">
         {status === "pass" ? (
           <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
@@ -733,7 +733,7 @@ function ScoreRing({ score, color }: { score: number; color: string }) {
   return (
     <div className="relative grid h-28 w-28 place-items-center">
       <svg viewBox="0 0 120 120" className="-rotate-90">
-        <circle cx="60" cy="60" r={R} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
+        <circle cx="60" cy="60" r={R} fill="none" stroke="var(--border)" strokeWidth="8" />
         <motion.circle 
           cx="60" 
           cy="60" 
@@ -749,8 +749,8 @@ function ScoreRing({ score, color }: { score: number; color: string }) {
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <div className="text-2xl font-bold tabular-nums text-white">{score}</div>
-        <div className="text-[9px] font-semibold text-white/40">/100</div>
+        <div className="text-2xl font-bold tabular-nums text-foreground">{score}</div>
+        <div className="text-[9px] font-semibold text-muted-foreground">/100</div>
       </div>
     </div>
   );
