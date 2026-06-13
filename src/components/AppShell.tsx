@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import {
   LogOut, LayoutDashboard, User as UserIcon, Sun, Moon, Brain, Code,
-  Sparkles, Menu, X, ChevronRight, ChevronLeft
+  Sparkles, Menu, X, ChevronRight, ChevronLeft, Mic
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
@@ -98,6 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "Quiz AI",   path: "/quiz",      icon: Brain },
     { name: "Lab",       path: "/lab",        icon: Code },
+    { name: "Interview", path: "/interview",  icon: Mic },
     { name: "Profile",   path: "/profile",    icon: UserIcon },
   ];
 
