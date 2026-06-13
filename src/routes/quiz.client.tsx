@@ -16,7 +16,7 @@ import { generateQuiz, saveQuizResult, listQuizResults } from "@/lib/quiz.functi
 
 const SUBJECTS = ["Data Structures & Algorithms", "Database Management Systems", "Operating Systems", "Computer Networks", "Web Development", "Machine Learning", "System Design"];
 const DIFFICULTIES = ["Easy", "Medium", "Hard", "Adaptive AI"];
-const TYPES = ["mcq", "true_false", "fill_blanks", "mixed"];
+
 
 export default function QuizClient() {
   const genQuizFn = useServerFn(generateQuiz);
@@ -30,7 +30,7 @@ export default function QuizClient() {
   const [dragOver, setDragOver] = useState(false);
   const [subject, setSubject] = useState(SUBJECTS[0]);
   const [difficulty, setDifficulty] = useState("Medium");
-  const [qType, setQType] = useState("mixed");
+  const qType = "mcq";
   
   // Quiz running states
   const [questions, setQuestions] = useState<any[]>([]);
@@ -251,28 +251,15 @@ export default function QuizClient() {
                       </select>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-bold text-muted-foreground block mb-2">Difficulty</label>
-                        <select 
-                          value={difficulty} 
-                          onChange={e => setDifficulty(e.target.value)}
-                          className="w-full bg-black/40 border border-border rounded-xl px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:border-primary"
-                        >
-                          {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-bold text-muted-foreground block mb-2">Questions style</label>
-                        <select 
-                          value={qType} 
-                          onChange={e => setQType(e.target.value)}
-                          className="w-full bg-black/40 border border-border rounded-xl px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:border-primary"
-                        >
-                          {TYPES.map(t => <option key={t} value={t}>{t === "true_false" ? "True / False" : t.toUpperCase().replace("_", " ")}</option>)}
-                        </select>
-                      </div>
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground block mb-2">Difficulty</label>
+                      <select 
+                        value={difficulty} 
+                        onChange={e => setDifficulty(e.target.value)}
+                        className="w-full bg-black/40 border border-border rounded-xl px-4 py-2.5 text-xs font-medium text-foreground outline-none focus:border-primary"
+                      >
+                        {DIFFICULTIES.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
                     </div>
 
                     <div>

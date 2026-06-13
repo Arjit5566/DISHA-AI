@@ -1,5 +1,5 @@
 // src/routes/dashboard.client.tsx
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState, useEffect } from "react";
@@ -144,12 +144,21 @@ export default function Dashboard() {
             {/* Header / Meta */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
               <div>
-                <button 
-                  onClick={handleReset} 
-                  className="mb-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-full border border-white/5"
-                >
-                  <ArrowLeft className="h-3 w-3" /> Re-analyze New Resume
-                </button>
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <button 
+                    onClick={handleReset} 
+                    className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-full border border-white/5"
+                  >
+                    <ArrowLeft className="h-3 w-3" /> Re-analyze New Resume
+                  </button>
+                  <Link 
+                    to="/results/$id"
+                    params={{ id: analysis.id }}
+                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-white transition-colors bg-primary/10 hover:bg-primary/30 px-3 py-1.5 rounded-full border border-primary/20"
+                  >
+                    <Briefcase className="h-3.5 w-3.5" /> View Jobs & Internships
+                  </Link>
+                </div>
                 <h1 className="text-2xl font-bold flex items-center gap-2">
                   Alignment Evaluation <Sparkles className="h-5 w-5 text-primary animate-pulse" />
                 </h1>
@@ -668,13 +677,11 @@ export default function Dashboard() {
                 <h3 className="text-sm font-bold text-muted-foreground mb-4">Your Recent Evaluations</h3>
                 <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                   {history.slice(0, 3).map((hist: any) => (
-                    <div 
+                    <Link 
                       key={hist.id} 
-                      onClick={() => {
-                        setActiveId(hist.id);
-                        navigate({ to: "/dashboard", search: { id: hist.id } });
-                      }}
-                      className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-primary/30 transition-all cursor-pointer flex justify-between items-center group"
+                      to="/results/$id"
+                      params={{ id: hist.id }}
+                      className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-primary/30 transition-all cursor-pointer flex justify-between items-center group text-left"
                     >
                       <div className="min-w-0">
                         <h4 className="text-xs font-bold text-foreground truncate">{hist.target_role}</h4>
@@ -684,7 +691,7 @@ export default function Dashboard() {
                         <span className="text-xs font-bold text-primary">{hist.readiness_score}</span>
                         <Eye className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </motion.div>

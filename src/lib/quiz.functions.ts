@@ -13,7 +13,7 @@ const QuizInput = z.object({
 
 export interface QuizQuestion {
   id: string;
-  type: "mcq" | "true_false" | "fill_blanks";
+  type: "mcq";
   question: string;
   options: string[];
   answer: string;
@@ -26,14 +26,14 @@ export interface QuizResult {
   suggestions: string[];
 }
 
-const QUIZ_SYS = `You are a Quiz AI engine. Generate a comprehensive quiz of 5 questions from the user's study notes.
+const QUIZ_SYS = `You are a Quiz AI engine. Generate a comprehensive quiz of exactly 10 multiple-choice (MCQ) questions from the user's study notes.
 Return ONLY valid JSON matching this TypeScript shape (do not wrap in markdown or fences, output raw JSON):
 
 {
   "questions": [
     {
       "id": string,
-      "type": "mcq" | "true_false" | "fill_blanks",
+      "type": "mcq",
       "question": string,
       "options": string[],
       "answer": string,
@@ -45,10 +45,12 @@ Return ONLY valid JSON matching this TypeScript shape (do not wrap in markdown o
 }
 
 Rules:
-- MCQ: Provide exactly 4 options.
-- True/False: Provide exactly ["True", "False"]. The answer must be "True" or "False".
-- Fill Blanks: Provide 1 correct word as the answer, and options can be empty or have 4 candidate words.
-- Tailor questions specifically to the notes content.`;
+- Generate exactly 10 MCQ questions.
+- Each question MUST have exactly 4 options.
+- The "answer" field must match one of the 4 options exactly.
+- The "type" field must always be "mcq".
+- Tailor questions specifically to the notes content.
+- Ensure questions cover different aspects and difficulty levels from the study material.`;
 
 function stripFences(s: string) {
   return s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
@@ -68,7 +70,7 @@ export const generateQuiz = createServerFn({ method: "POST" })
       
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${geminiKey}`,
           {
             method: "POST",
             headers: {
@@ -176,38 +178,37 @@ export const listQuizResults = createServerFn({ method: "GET" })
   });
 
 function getMockQuiz(subject: string, difficulty: string, questionType: string): QuizResult {
-  const type = questionType === "mixed" ? "mcq" : questionType;
   return {
     questions: [
       {
         id: "q1",
-        type: type as any,
+        type: "mcq",
         question: `What is the primary objective of studying ${subject}?`,
-        options: type === "true_false" ? ["True", "False"] : ["To master core fundamentals", "To ignore design patterns", "To complete tests without understanding", "To avoid practical implementations"],
-        answer: type === "true_false" ? "True" : "To master core fundamentals",
+        options: ["To master core fundamentals", "To ignore design patterns", "To complete tests without understanding", "To avoid practical implementations"],
+        answer: "To master core fundamentals",
         explanation: `${subject} is best understood by grasping its core fundamentals first.`,
       },
       {
         id: "q2",
-        type: type as any,
+        type: "mcq",
         question: `Which of the following is considered a key concept in ${subject}?`,
-        options: type === "true_false" ? ["True", "False"] : ["Efficiency and Optimization", "Redundancy", "Ignoring Constraints", "Brute-force only"],
-        answer: type === "true_false" ? "True" : "Efficiency and Optimization",
+        options: ["Efficiency and Optimization", "Redundancy", "Ignoring Constraints", "Brute-force only"],
+        answer: "Efficiency and Optimization",
         explanation: "Efficiency is paramount in technical and computing subjects.",
       },
       {
         id: "q3",
-        type: type as any,
-        question: `Adaptive AI models modify quiz complexity based on user performance.`,
-        options: ["True", "False"],
-        answer: "True",
+        type: "mcq",
+        question: `What do adaptive AI models primarily adjust in quiz systems?`,
+        options: ["Complexity based on user performance", "The number of users", "The programming language", "The screen resolution"],
+        answer: "Complexity based on user performance",
         explanation: "Adaptive systems dynamically adjust difficulty to match candidate knowledge.",
       },
       {
         id: "q4",
-        type: type === "fill_blanks" ? "fill_blanks" : "mcq",
-        question: `To build highly modular software, engineers use the SOLID ____________.`,
-        options: type === "true_false" ? ["True", "False"] : ["Principles", "Libraries", "Scripts", "Compilers"],
+        type: "mcq",
+        question: `To build highly modular software, engineers use the SOLID __________.`,
+        options: ["Principles", "Libraries", "Scripts", "Compilers"],
         answer: "Principles",
         explanation: "The SOLID Principles are five design principles intended to make software designs more understandable, flexible, and maintainable.",
       },
@@ -218,6 +219,46 @@ function getMockQuiz(subject: string, difficulty: string, questionType: string):
         options: ["Deconstruct into smaller sub-tasks", "Guess randomly", "Postpone indefinitely", "Ask external resources immediately"],
         answer: "Deconstruct into smaller sub-tasks",
         explanation: "Deconstruction allows structured problem solving under pressure.",
+      },
+      {
+        id: "q6",
+        type: "mcq",
+        question: `Which principle states that a class should have only one reason to change?`,
+        options: ["Single Responsibility Principle", "Open-Closed Principle", "Liskov Substitution", "Dependency Inversion"],
+        answer: "Single Responsibility Principle",
+        explanation: "SRP ensures each class has a single, well-defined purpose.",
+      },
+      {
+        id: "q7",
+        type: "mcq",
+        question: `What is the time complexity of binary search on a sorted array?`,
+        options: ["O(log n)", "O(n)", "O(n log n)", "O(1)"],
+        answer: "O(log n)",
+        explanation: "Binary search halves the search space with each comparison, yielding logarithmic time.",
+      },
+      {
+        id: "q8",
+        type: "mcq",
+        question: `Which data structure uses FIFO (First In, First Out) ordering?`,
+        options: ["Queue", "Stack", "Tree", "Graph"],
+        answer: "Queue",
+        explanation: "Queues process elements in the order they were added — first in, first out.",
+      },
+      {
+        id: "q9",
+        type: "mcq",
+        question: `What does the 'O' in SOLID stand for?`,
+        options: ["Open-Closed Principle", "Object Principle", "Optimization Principle", "Override Principle"],
+        answer: "Open-Closed Principle",
+        explanation: "The Open-Closed Principle states that software entities should be open for extension but closed for modification.",
+      },
+      {
+        id: "q10",
+        type: "mcq",
+        question: `Which of the following best describes abstraction in ${subject}?`,
+        options: ["Hiding implementation details and exposing only essential features", "Writing longer code for clarity", "Avoiding the use of functions", "Duplicating code across modules"],
+        answer: "Hiding implementation details and exposing only essential features",
+        explanation: "Abstraction simplifies complexity by hiding unnecessary details from the user.",
       }
     ],
     weak_topics: ["Structural Decomposition", "Optimization Algorithms", "Design Patterns"],

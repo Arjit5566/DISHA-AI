@@ -2,21 +2,24 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { 
   CheckCircle2, ArrowRight, Loader2, Sparkles, ArrowLeft, Info, 
   AlertCircle, Database, FileSpreadsheet, MessageSquare, Code, 
   BarChart3, Calculator, Target, Lock, FileText, Briefcase, 
-  GraduationCap, Building2, MapPin, Globe, RefreshCw, AlertTriangle 
+  GraduationCap, Building2, MapPin, Globe, RefreshCw, AlertTriangle,
+  Download, Star, Award, Zap
 } from "lucide-react";
 import { getAnalysis, getAdzunaOpportunities } from "@/lib/analysis.functions";
 import { AuthGate } from "@/components/AuthGate";
 import { AppShell } from "@/components/AppShell";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { useAuth } from "@/lib/auth";
+import jsPDF from "jspdf";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/results/$id")({
-  head: () => ({ meta: [{ title: "Analysis Result — SkillGap Analyzer" }] }),
+  head: () => ({ meta: [{ title: "Analysis Result — Disha AI" }] }),
   component: () => <AuthGate><Results /></AuthGate>,
 });
 
@@ -44,7 +47,7 @@ function Results() {
 
   const name = (user?.user_metadata as { full_name?: string } | undefined)?.full_name || user?.email?.split("@")[0] || "there";
 
-  const [activeTab, setActiveTab] = useState<"analysis" | "opportunities">("analysis");
+  const [activeTab, setActiveTab] = useState<"analysis" | "opportunities" | "suggested-resume">("analysis");
   const [selectedCountry, setSelectedCountry] = useState<string>("in");
   const [subTab, setSubTab] = useState<"job" | "internship">("job");
 
@@ -99,10 +102,10 @@ function Results() {
       </motion.div>
 
       {/* Sleek Tab Bar */}
-      <div className="mb-8 flex border-b border-white/10">
+      <div className="mb-8 flex border-b border-white/10 overflow-x-auto scrollbar-none">
         <button
           onClick={() => setActiveTab("analysis")}
-          className={`pb-4 px-6 text-sm font-semibold border-b-2 transition-all cursor-pointer ${
+          className={`pb-4 px-6 text-sm font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === "analysis"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
@@ -112,13 +115,23 @@ function Results() {
         </button>
         <button
           onClick={() => setActiveTab("opportunities")}
-          className={`pb-4 px-6 text-sm font-semibold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
+          className={`pb-4 px-6 text-sm font-semibold border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
             activeTab === "opportunities"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           Job & Internship Matcher <Sparkles className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={() => setActiveTab("suggested-resume")}
+          className={`pb-4 px-6 text-sm font-semibold border-b-2 transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+            activeTab === "suggested-resume"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Suggested Resume <FileText className="h-3.5 w-3.5" />
         </button>
       </div>
 
@@ -443,6 +456,18 @@ function Results() {
           )}
         </motion.div>
       )}
+
+      {activeTab === "suggested-resume" && (
+        <SuggestedResumeSection
+          userName={name}
+          userEmail={user?.email || ""}
+          targetRole={data.target_role as string}
+          summary={data.summary as string || ""}
+          foundSkills={found}
+          missingSkills={missing}
+          score={score}
+        />
+      )}
     </AppShell>
   );
 }
@@ -471,5 +496,391 @@ function ScoreRing({ score }: { score: number }) {
         <div className="text-sm font-medium text-white/50">/100</div>
       </div>
     </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Suggested Resume Section — shows an ideal resume preview with all skills
+   (found + missing) and provides PDF download.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+interface SuggestedResumeProps {
+  userName: string;
+  userEmail: string;
+  targetRole: string;
+  summary: string;
+  foundSkills: string[];
+  missingSkills: string[];
+  score: number;
+}
+
+function SuggestedResumeSection({
+  userName,
+  userEmail,
+  targetRole,
+  summary,
+  foundSkills,
+  missingSkills,
+  score,
+}: SuggestedResumeProps) {
+  const allSkills = [...new Set([...foundSkills, ...missingSkills])];
+
+  const handleDownloadPDF = useCallback(() => {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 40;
+    const contentWidth = pageWidth - margin * 2;
+    let y = 45;
+
+    // ── Accent bar at top ──
+    doc.setFillColor("#8B5CF6");
+    doc.rect(0, 0, pageWidth, 6, "F");
+
+    // ── Name ──
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(24);
+    doc.setTextColor("#111827");
+    doc.text(userName || "Your Name", margin, y);
+    y += 22;
+
+    // ── Target Role subtitle ──
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.setTextColor("#8B5CF6");
+    doc.text(targetRole, margin, y);
+    y += 16;
+
+    // ── Contact line ──
+    doc.setFontSize(9);
+    doc.setTextColor("#6B7280");
+    const contactLine = [userEmail, "linkedin.com/in/yourprofile", "github.com/yourprofile"].filter(Boolean).join("  •  ");
+    doc.text(contactLine, margin, y);
+    y += 20;
+
+    // ── Divider ──
+    doc.setDrawColor("#E5E7EB");
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 20;
+
+    // ── Helper: section header ──
+    const sectionHeader = (title: string) => {
+      if (y > 760) { doc.addPage(); y = 45; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor("#8B5CF6");
+      doc.text(title.toUpperCase(), margin, y);
+      y += 4;
+      doc.setDrawColor("#8B5CF6");
+      doc.setLineWidth(1);
+      doc.line(margin, y, margin + 50, y);
+      y += 14;
+    };
+
+    // ── PROFESSIONAL SUMMARY ──
+    sectionHeader("Professional Summary");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor("#374151");
+    const summaryText = summary || `Results-driven ${targetRole} professional with a strong foundation in modern technologies and a passion for building impactful solutions. Skilled in cross-functional collaboration and continuously expanding technical expertise.`;
+    const summaryLines = doc.splitTextToSize(summaryText, contentWidth);
+    doc.text(summaryLines, margin, y);
+    y += summaryLines.length * 13 + 16;
+
+    // ── CORE SKILLS ──
+    sectionHeader("Core Skills");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor("#374151");
+
+    // Render skills in multi-column layout
+    const colWidth = contentWidth / 3;
+    allSkills.forEach((skill, i) => {
+      if (y > 770) { doc.addPage(); y = 45; }
+      const col = i % 3;
+      const x = margin + col * colWidth;
+      doc.setTextColor("#374151");
+      doc.text(`• ${skill}`, x, y);
+      if (col === 2 || i === allSkills.length - 1) y += 14;
+    });
+    y += 10;
+
+    // ── SKILLS YOU SHOULD ADD (highlighted) ──
+    if (missingSkills.length > 0) {
+      sectionHeader("Skills to Add (Recommended)");
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(9);
+      doc.setTextColor("#DC2626");
+      const missingText = missingSkills.join(", ");
+      const missingLines = doc.splitTextToSize(`These skills are critical for the ${targetRole} role: ${missingText}`, contentWidth);
+      doc.text(missingLines, margin, y);
+      y += missingLines.length * 12 + 16;
+    }
+
+    // ── EXPERIENCE PLACEHOLDER ──
+    sectionHeader("Professional Experience");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor("#111827");
+    doc.text(`${targetRole}  •  [Company Name]`, margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor("#6B7280");
+    doc.text("[Start Date] — Present", pageWidth - margin - doc.getTextWidth("[Start Date] — Present"), y);
+    y += 16;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor("#374151");
+    const bullets = [
+      `Led development of [project/product] resulting in [quantifiable impact, e.g., 30% increase in performance].`,
+      `Collaborated with cross-functional teams to deliver [feature/system] using ${foundSkills.slice(0, 3).join(", ") || "modern technologies"}.`,
+      `Implemented best practices in ${missingSkills.slice(0, 2).join(" and ") || "emerging technologies"} to improve team productivity.`,
+    ];
+    bullets.forEach((b) => {
+      if (y > 770) { doc.addPage(); y = 45; }
+      const bLines = doc.splitTextToSize(`• ${b}`, contentWidth - 10);
+      doc.text(bLines, margin + 10, y);
+      y += bLines.length * 13;
+    });
+    y += 16;
+
+    // ── EDUCATION PLACEHOLDER ──
+    sectionHeader("Education");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor("#111827");
+    doc.text("[Your Degree]  •  [University Name]", margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor("#6B7280");
+    doc.text("[Year of Graduation]", pageWidth - margin - doc.getTextWidth("[Year of Graduation]"), y);
+    y += 24;
+
+    // ── PROJECTS PLACEHOLDER ──
+    sectionHeader("Key Projects");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor("#111827");
+    doc.text("[Project Name]", margin, y);
+    y += 14;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor("#374151");
+    const projBullet = `Built a [type of project] leveraging ${allSkills.slice(0, 4).join(", ")} that [achieved specific result].`;
+    const projLines = doc.splitTextToSize(`• ${projBullet}`, contentWidth - 10);
+    doc.text(projLines, margin + 10, y);
+    y += projLines.length * 13 + 10;
+
+    // ── Footer ──
+    const footerY = doc.internal.pageSize.getHeight() - 20;
+    doc.setFontSize(7);
+    doc.setTextColor("#9CA3AF");
+    doc.text("Generated by DISHA AI — Your Career Intelligence Platform", margin, footerY);
+    doc.text(`Readiness Score: ${score}/100`, pageWidth - margin - doc.getTextWidth(`Readiness Score: ${score}/100`), footerY);
+
+    doc.save(`DISHA-AI-Suggested-Resume-${targetRole.replace(/\s+/g, "_")}.pdf`);
+    toast.success("Resume PDF downloaded!");
+  }, [userName, userEmail, targetRole, summary, foundSkills, missingSkills, allSkills, score]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-8"
+    >
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Award className="h-6 w-6 text-primary" />
+            Your Resume Should Look Like This
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            An ideal resume for <span className="text-primary font-semibold">{targetRole}</span> with all recommended skills included.
+          </p>
+        </div>
+        <button
+          onClick={handleDownloadPDF}
+          className="group flex items-center gap-2 rounded-xl gradient-primary-bg px-6 py-3 text-sm font-bold text-white transition-all hover:opacity-90 shadow-[0_0_20px_rgba(139,92,246,0.4)] hover:-translate-y-0.5"
+        >
+          <Download className="h-4 w-4 transition-transform group-hover:-translate-y-0.5" />
+          Download Resume PDF
+        </button>
+      </div>
+
+      {/* Resume Preview Card — dark glassmorphism style to match the app */}
+      <div className="glass-dark rounded-3xl border border-white/10 overflow-hidden shadow-[0_0_60px_rgba(139,92,246,0.08)]">
+
+        {/* Accent Bar */}
+        <div className="h-1.5 w-full bg-gradient-to-r from-primary via-accent to-primary" />
+
+        <div className="p-8 md:p-10 space-y-8">
+
+          {/* ── Name & Role Header ── */}
+          <div className="border-b border-white/10 pb-6">
+            <h3 className="text-3xl font-black text-foreground tracking-tight">{userName || "Your Name"}</h3>
+            <p className="text-primary font-semibold text-lg mt-1">{targetRole}</p>
+            <div className="flex flex-wrap gap-4 mt-3 text-xs text-muted-foreground">
+              <span>{userEmail || "your.email@example.com"}</span>
+              <span>•</span>
+              <span>linkedin.com/in/yourprofile</span>
+              <span>•</span>
+              <span>github.com/yourprofile</span>
+            </div>
+          </div>
+
+          {/* ── Professional Summary ── */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-1 w-1 rounded-full bg-primary" />
+              <h4 className="text-xs font-bold text-primary uppercase tracking-widest">Professional Summary</h4>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {summary || `Results-driven ${targetRole} professional with a strong foundation in modern technologies and a passion for building impactful solutions. Skilled in cross-functional collaboration and continuously expanding technical expertise.`}
+            </p>
+          </div>
+
+          {/* ── Core Skills Grid ── */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="h-1 w-1 rounded-full bg-primary" />
+              <h4 className="text-xs font-bold text-primary uppercase tracking-widest">Core Skills</h4>
+              <span className="ml-auto text-[10px] text-muted-foreground">{allSkills.length} skills</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {foundSkills.map((skill, i) => (
+                <span
+                  key={`f-${i}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success/10 text-success text-xs font-semibold ring-1 ring-success/20"
+                >
+                  <CheckCircle2 className="h-3 w-3" /> {skill}
+                </span>
+              ))}
+              {missingSkills.map((skill, i) => (
+                <span
+                  key={`m-${i}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-semibold ring-1 ring-primary/20 animate-pulse"
+                >
+                  <Zap className="h-3 w-3" /> {skill}
+                  <span className="text-[9px] opacity-70 font-normal ml-0.5">NEW</span>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Experience Placeholder ── */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="h-1 w-1 rounded-full bg-primary" />
+              <h4 className="text-xs font-bold text-primary uppercase tracking-widest">Professional Experience</h4>
+            </div>
+            <div className="glass-dark rounded-2xl p-5 border border-white/5 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h5 className="text-sm font-bold text-foreground">{targetRole}</h5>
+                  <p className="text-xs text-muted-foreground">[Company Name]</p>
+                </div>
+                <span className="text-[10px] text-muted-foreground font-semibold bg-white/5 px-3 py-1 rounded-full">[Start] — Present</span>
+              </div>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <Star className="h-3 w-3 text-primary mt-1 shrink-0" />
+                  <span>Led development of [project/product] resulting in [quantifiable impact, e.g., 30% increase in performance].</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Star className="h-3 w-3 text-primary mt-1 shrink-0" />
+                  <span>Collaborated with cross-functional teams to deliver [feature/system] using {foundSkills.slice(0, 3).join(", ") || "modern technologies"}.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Star className="h-3 w-3 text-primary mt-1 shrink-0" />
+                  <span>Implemented best practices in {missingSkills.slice(0, 2).join(" and ") || "emerging technologies"} to improve team productivity.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* ── Education Placeholder ── */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="h-1 w-1 rounded-full bg-primary" />
+              <h4 className="text-xs font-bold text-primary uppercase tracking-widest">Education</h4>
+            </div>
+            <div className="glass-dark rounded-2xl p-5 border border-white/5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h5 className="text-sm font-bold text-foreground">[Your Degree]</h5>
+                  <p className="text-xs text-muted-foreground">[University Name]</p>
+                </div>
+                <span className="text-[10px] text-muted-foreground font-semibold bg-white/5 px-3 py-1 rounded-full">[Year]</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Projects Placeholder ── */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="h-1 w-1 rounded-full bg-primary" />
+              <h4 className="text-xs font-bold text-primary uppercase tracking-widest">Key Projects</h4>
+            </div>
+            <div className="glass-dark rounded-2xl p-5 border border-white/5 space-y-2">
+              <h5 className="text-sm font-bold text-foreground">[Project Name]</h5>
+              <p className="text-sm text-muted-foreground flex items-start gap-2">
+                <Star className="h-3 w-3 text-primary mt-1 shrink-0" />
+                Built a [type of project] leveraging {allSkills.slice(0, 4).join(", ")} that [achieved specific result].
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-8 py-4 border-t border-white/5 flex items-center justify-between">
+          <span className="text-[10px] text-muted-foreground">Generated by DISHA AI</span>
+          <span className="text-[10px] text-muted-foreground">Readiness Score: <span className="text-primary font-bold">{score}/100</span></span>
+        </div>
+      </div>
+
+      {/* Tips callout */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="glass-dark rounded-2xl p-6 border border-primary/20 shadow-[0_0_30px_rgba(139,92,246,0.08)]"
+      >
+        <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-3">
+          <Sparkles className="h-4 w-4 text-primary" /> Tips to Strengthen Your Resume
+        </h4>
+        <ul className="space-y-2 text-sm text-muted-foreground">
+          <li className="flex items-start gap-2">
+            <CheckCircle2 className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
+            Replace all <span className="text-primary font-medium">[bracket placeholders]</span> with your real information after downloading.
+          </li>
+          <li className="flex items-start gap-2">
+            <CheckCircle2 className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
+            Add the <span className="text-primary font-medium">{missingSkills.length} missing skills</span> (marked with ⚡ NEW) by taking courses from your roadmap.
+          </li>
+          <li className="flex items-start gap-2">
+            <CheckCircle2 className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
+            Use action verbs and quantify achievements (e.g., "Increased performance by 40%").
+          </li>
+          <li className="flex items-start gap-2">
+            <CheckCircle2 className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
+            Keep the resume to 1-2 pages maximum for optimal ATS compatibility.
+          </li>
+        </ul>
+      </motion.div>
+
+      {/* Second download CTA */}
+      <div className="flex justify-center">
+        <button
+          onClick={handleDownloadPDF}
+          className="group flex items-center gap-2 rounded-xl gradient-primary-bg px-8 py-4 text-sm font-bold text-white transition-all hover:opacity-90 shadow-[0_0_25px_rgba(139,92,246,0.4)] hover:-translate-y-0.5"
+        >
+          <Download className="h-5 w-5 transition-transform group-hover:-translate-y-0.5" />
+          Download Your Suggested Resume
+        </button>
+      </div>
+    </motion.div>
   );
 }

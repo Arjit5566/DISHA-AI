@@ -22,7 +22,7 @@ export interface AnalysisResult {
   resources: Resource[];
 }
 
-const SYS = `You are SkillGap Analyzer, an expert career coach for tech roles.
+const SYS = `You are Disha AI, an expert career coach for tech roles.
 You receive a candidate's resume text and a target role.
 
 Return ONLY valid JSON matching this TypeScript shape (no markdown, no commentary):
@@ -64,7 +64,7 @@ export const analyzeResume = createServerFn({ method: "POST" })
       
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${geminiKey}`,
           {
             method: "POST",
             headers: {
@@ -223,7 +223,7 @@ export const getNaukriRecommendations = createServerFn({ method: "POST" })
     try {
       if (geminiKey && geminiKey !== "YOUR_GEMINI_API_KEY") {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${geminiKey}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -551,4 +551,94 @@ function generateMockOpportunities(
 
   return opportunities;
 }
+
+const CHATBOT_SYS = `You are Disha AI, a professional career coach and technical mentor. 
+Your goal is to help candidates improve their career readiness, resumes, ATS formatting, coding skills, and interview preparation.
+Provide structured, professional, and encouraging answers. Use markdown formatting such as lists and bold text where appropriate.`;
+
+export const askChatbot = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      message: z.string(),
+      history: z.array(
+        z.object({
+          role: z.enum(["user", "assistant"]),
+          content: z.string(),
+        })
+      ).optional(),
+    }).parse(input)
+  )
+  .handler(async ({ data }): Promise<string> => {
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const lovableKey = process.env.LOVABLE_API_KEY;
+
+    // Map history to Gemini format (roles: user or model)
+    const contents = [];
+    if (data.history) {
+      // Limit context to last 10 messages to save tokens/avoid latency
+      const slice = data.history.slice(-10);
+      for (const msg of slice) {
+        contents.push({
+          role: msg.role === "user" ? "user" : "model",
+          parts: [{ text: msg.content }],
+        });
+      }
+    }
+    contents.push({
+      role: "user",
+      parts: [{ text: data.message }],
+    });
+
+    if (geminiKey && geminiKey !== "YOUR_GEMINI_API_KEY") {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${geminiKey}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents,
+              systemInstruction: { parts: [{ text: CHATBOT_SYS }] },
+              generationConfig: {
+                temperature: 0.7,
+              },
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(`Gemini API error (Status ${response.status}): ${errText}`);
+        }
+
+        const resData = await response.json();
+        const responseText = resData?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!responseText) {
+          throw new Error("No text returned from Gemini API");
+        }
+        return responseText;
+      } catch (err: unknown) {
+        throw new Error("Gemini chatbot query failed: " + (err instanceof Error ? err.message : String(err)));
+      }
+    } else if (lovableKey) {
+      const gateway = createLovableAiGatewayProvider(lovableKey);
+      try {
+        const prompt = `Conversation history:\n${(data.history || []).map(h => `${h.role === 'user' ? 'User' : 'Assistant'}: ${h.content}`).join('\n')}\n\nUser: ${data.message}\nAssistant:`;
+        const { text } = await generateText({
+          model: gateway("google/gemini-3-flash-preview"),
+          system: CHATBOT_SYS,
+          prompt,
+          temperature: 0.7,
+        });
+        return text;
+      } catch (err: unknown) {
+        throw new Error("Lovable chatbot query failed: " + (err instanceof Error ? err.message : String(err)));
+      }
+    } else {
+      throw new Error("No AI configuration found. Chatbot falling back to offline knowledge base.");
+    }
+  });
 

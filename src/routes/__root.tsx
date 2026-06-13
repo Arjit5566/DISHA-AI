@@ -43,10 +43,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SkillGap Analyzer — Discover Your Skill Gaps" },
+      { title: "Disha AI — Guiding Careers Through Intelligence" },
       { name: "description", content: "AI-powered platform that analyzes your resume, finds skill gaps for your target role, and builds your personalized learning roadmap." },
-      { property: "og:title", content: "SkillGap Analyzer — Discover Your Skill Gaps" },
-      { name: "twitter:title", content: "SkillGap Analyzer — Discover Your Skill Gaps" },
+      { property: "og:title", content: "Disha AI — Guiding Careers Through Intelligence" },
+      { name: "twitter:title", content: "Disha AI — Guiding Careers Through Intelligence" },
       { property: "og:description", content: "AI-powered platform that analyzes your resume, finds skill gaps for your target role, and builds your personalized learning roadmap." },
       { name: "twitter:description", content: "AI-powered platform that analyzes your resume, finds skill gaps for your target role, and builds your personalized learning roadmap." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/01347a2f-a5a3-4645-aee1-47b400981237/id-preview-90660e82--04c0364f-08f3-456c-af3e-b4fb9c1e4f1a.lovable.app-1780681070604.png" },

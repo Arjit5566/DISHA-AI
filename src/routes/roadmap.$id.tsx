@@ -9,7 +9,7 @@ import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/roadmap/$id")({
-  head: () => ({ meta: [{ title: "Your Roadmap — SkillGap Analyzer" }] }),
+  head: () => ({ meta: [{ title: "Your Roadmap — Disha AI" }] }),
   component: () => <AuthGate><Roadmap /></AuthGate>,
 });
 

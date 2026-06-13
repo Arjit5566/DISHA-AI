@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff, Loader2, Sparkles, Mail, Lock, User as UserIcon } from "lucide-react";
+import { Eye, EyeOff, Loader2, Mail, Lock, User as UserIcon } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -11,6 +11,11 @@ import { ParticleField } from "@/components/effects/ParticleField";
 import { CursorGlow } from "@/components/effects/CursorGlow";
 import { HeroScene } from "@/components/three/HeroScene";
 import { MagneticButton } from "@/components/effects/MagneticButton";
+import { DishaLogo } from "@/components/DishaLogo";
+
+function DishaLogoInline() {
+  return <DishaLogo size={32} showText={false} dark={true} />;
+}
 
 const search = z.object({ tab: z.enum(["login", "signup"]).catch("login") });
 
@@ -102,9 +107,9 @@ function AuthPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
           className="mx-auto w-full max-w-md rounded-3xl border border-white/10 glass-dark p-8 shadow-[0_30px_120px_-30px_rgba(99,102,241,0.55)]">
           <div className="mb-6 flex items-center gap-2">
-            <div className="grid h-9 w-9 place-items-center rounded-xl gradient-aurora-bg"><Sparkles className="h-5 w-5 text-white" /></div>
+            <DishaLogoInline />
             <div>
-              <h1 className="text-lg font-semibold">SkillGap Analyzer</h1>
+              <h1 className="text-lg font-semibold">Welcome to Disha AI</h1>
               <p className="text-xs text-white/60">Map your skills. Plan your future.</p>
             </div>
           </div>

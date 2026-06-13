@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Download, Loader2, Mail, Pencil, Award, Brain, CheckCircle2, 
   FileCheck, Database, Play, Clock, Star, Flame, Trophy, Trash2,
-  AlertCircle, ArrowRight, Eye, ShieldCheck, Check
+  AlertCircle, ArrowRight, Eye, ShieldCheck, Check, Camera, Github, Linkedin, ExternalLink
 } from "lucide-react";
 import { listMyAnalyses, getAnalysis } from "@/lib/analysis.functions";
 import { listQuizResults } from "@/lib/quiz.functions";
@@ -18,13 +18,53 @@ import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianG
 import jsPDF from "jspdf";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ProfileScene } from "@/components/three/ProfileScene";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "Profile — Disha AI" }] }),
   component: () => <AuthGate><Profile /></AuthGate>,
 });
+
+// Helper for image compression to avoid user metadata size limit
+function compressAndResizeImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 200;
+        const MAX_HEIGHT = 200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        // Compress to JPEG with 0.6 quality for small size (~15KB)
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+        resolve(dataUrl);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+}
 
 function Profile() {
   const { user } = useAuth();
@@ -39,39 +79,107 @@ function Profile() {
   const { data: labs, isLoading: loadingLabs } = useQuery({ queryKey: ["my-labs"], queryFn: () => listLabs() });
 
   // Profile data
-  const fullName = (user?.user_metadata as { full_name?: string } | undefined)?.full_name || user?.email?.split("@")[0] || "User";
   const meta = (user?.user_metadata ?? {}) as Record<string, any>;
+  const fullName = meta.full_name || user?.email?.split("@")[0] || "User";
   const profilePic = meta.profilePic ?? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80';
   const careerGoal = meta.career_goal ?? 'Full Stack Developer';
   const preferredRole = meta.preferred_role ?? 'Software Engineer';
-  const linkedIn = meta.linkedin ?? '#';
-  const github = meta.github ?? '#';
+  const linkedIn = meta.linkedin ?? '';
+  const github = meta.github ?? '';
   const skills = meta.skills ?? [];
 
-  // Editing state
-  const [editingField, setEditingField] = useState<string | null>(null);
-  const [editingValue, setEditingValue] = useState<string>('');
+  // Edit details form states
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [formName, setFormName] = useState("");
+  const [formCareerGoal, setFormCareerGoal] = useState("");
+  const [formPreferredRole, setFormPreferredRole] = useState("");
+  const [formLinkedIn, setFormLinkedIn] = useState("");
+  const [formGitHub, setFormGitHub] = useState("");
+  const [formSkillsText, setFormSkillsText] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
-  function openEdit(field: string) {
-    const meta = (user?.user_metadata as Record<string, any>) ?? {};
-    setEditingValue(meta[field] ?? '');
-    setEditingField(field);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function openEditModal() {
+    setFormName(fullName);
+    setFormCareerGoal(careerGoal);
+    setFormPreferredRole(preferredRole);
+    setFormLinkedIn(linkedIn);
+    setFormGitHub(github);
+    setFormSkillsText(Array.isArray(skills) ? skills.join(", ") : "");
+    setIsEditModalOpen(true);
   }
 
-  async function saveEdit() {
-    if (!editingField) return;
+  async function handleSaveDetails() {
+    setIsSaving(true);
     try {
-      let val: any = editingValue;
-      if (editingField === 'skills') {
-        val = editingValue.split(',').map(s => s.trim()).filter(Boolean);
+      const parsedSkills = formSkillsText
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      // 1. Update auth.users metadata
+      const { error: authError } = await supabase.auth.updateUser({
+        data: {
+          full_name: formName,
+          career_goal: formCareerGoal,
+          preferred_role: formPreferredRole,
+          linkedin: formLinkedIn,
+          github: formGitHub,
+          skills: parsedSkills
+        }
+      });
+
+      if (authError) throw authError;
+
+      if (!user?.id) throw new Error("User session not found");
+
+      // 2. Sync with public.profiles table
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ full_name: formName })
+        .eq("id", user.id);
+
+      if (profileError) {
+        console.warn("Could not sync to profiles table:", profileError);
       }
-      await supabase.auth.updateUser({ data: { [editingField]: val } });
+
       await supabase.auth.refreshSession();
-      toast.success('Profile updated');
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Update failed');
+      toast.success("Profile details updated successfully!");
+      setIsEditModalOpen(false);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to update profile details");
     } finally {
-      setEditingField(null);
+      setIsSaving(false);
+    }
+  }
+
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file.");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const compressedBase64 = await compressAndResizeImage(file);
+      
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { profilePic: compressedBase64 }
+      });
+
+      if (authError) throw authError;
+
+      await supabase.auth.refreshSession();
+      toast.success("Profile picture updated!");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to upload profile picture");
+    } finally {
+      setIsUploading(false);
     }
   }
 
@@ -178,158 +286,289 @@ function Profile() {
         
         {/* Header Title */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="border-b border-white/5 pb-4">
-          <h1 className="text-3xl font-bold md:text-4xl">Your Profile & growth</h1>
+          <h1 className="text-3xl font-bold md:text-4xl">Your Profile & Growth</h1>
           <p className="text-sm text-muted-foreground mt-1">Monitor credentials, quiz analytics, and achievement badges.</p>
         </motion.div>
 
-        {/* Editing Modal */}
-        {editingField && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div className="bg-zinc-900 border border-white/10 p-6 rounded-2xl w-full max-w-sm">
-              <h2 className="text-lg font-semibold mb-4 text-white">Edit {editingField?.replace('_', ' ').toUpperCase()}</h2>
-              <input 
-                type="text" 
-                value={editingValue} 
-                onChange={e => setEditingValue(e.target.value)} 
-                placeholder={editingField === 'skills' ? 'React, TypeScript, CSS (comma separated)' : ''}
-                className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary" 
-              />
-              <div className="flex justify-end gap-2 mt-6">
-                <button onClick={() => setEditingField(null)} className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-white">Cancel</button>
-                <button onClick={saveEdit} className="px-5 py-2 bg-primary hover:bg-primary/90 rounded-xl text-xs font-bold text-white">Save Changes</button>
-              </div>
+        {/* Unified Edit Modal */}
+        <AnimatePresence>
+          {isEditModalOpen && (
+            <div className="fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-50 backdrop-blur-md">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="bg-zinc-950 border border-white/10 p-6 rounded-3xl w-full max-w-lg shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden"
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Pencil className="w-5 h-5 text-primary" /> Edit Profile Details
+                  </h2>
+                  <button 
+                    onClick={() => setIsEditModalOpen(false)}
+                    className="p-1.5 hover:bg-white/10 rounded-full text-muted-foreground hover:text-white transition-colors"
+                  >
+                    <XIcon className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground block mb-1.5">Full Name</label>
+                    <input 
+                      type="text" 
+                      value={formName} 
+                      onChange={e => setFormName(e.target.value)} 
+                      className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary transition-colors"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground block mb-1.5">Career Goal</label>
+                      <input 
+                        type="text" 
+                        value={formCareerGoal} 
+                        onChange={e => setFormCareerGoal(e.target.value)} 
+                        className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground block mb-1.5">Preferred Role</label>
+                      <input 
+                        type="text" 
+                        value={formPreferredRole} 
+                        onChange={e => setFormPreferredRole(e.target.value)} 
+                        className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground block mb-1.5 font-sans">LinkedIn Profile URL</label>
+                      <input 
+                        type="url" 
+                        value={formLinkedIn} 
+                        onChange={e => setFormLinkedIn(e.target.value)} 
+                        placeholder="https://linkedin.com/in/username"
+                        className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-muted-foreground block mb-1.5">GitHub Profile URL</label>
+                      <input 
+                        type="url" 
+                        value={formGitHub} 
+                        onChange={e => setFormGitHub(e.target.value)} 
+                        placeholder="https://github.com/username"
+                        className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-muted-foreground block mb-1.5">Skills (Comma-separated)</label>
+                    <textarea 
+                      value={formSkillsText} 
+                      onChange={e => setFormSkillsText(e.target.value)} 
+                      placeholder="React, Node.js, Python, AWS"
+                      rows={3}
+                      className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-xs outline-none text-white focus:border-primary resize-none transition-colors"
+                    />
+                    <span className="text-[10px] text-muted-foreground mt-1 block">Separate skills with commas. Empty entries are ignored.</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/5">
+                  <button 
+                    onClick={() => setIsEditModalOpen(false)} 
+                    className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-white transition-colors"
+                    disabled={isSaving}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleSaveDetails} 
+                    className="px-5 py-2.5 bg-primary hover:bg-primary/90 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                    {isSaving ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
+
+        {/* Hidden File Input for Avatar Upload */}
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          accept="image/*" 
+          className="hidden" 
+        />
 
         {/* Top Grid: Personal Details & Performance Metrics */}
         <div className="grid gap-6 md:grid-cols-3">
           
-          {/* Card 1: Personal Details */}
-          <div className="glass-dark rounded-3xl p-6 border border-white/5 md:col-span-1 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
+          {/* Card 1: Personal Details (Redesigned with large avatar & glowing neon effects) */}
+          <div className="glass-dark rounded-3xl p-6 border border-white/5 md:col-span-1 flex flex-col justify-between relative overflow-hidden group shadow-[0_4px_30px_rgba(0,0,0,0.2)]">
+            
+            {/* Glowing ambient background inside the card */}
+            <div className="absolute -right-20 -top-20 w-44 h-44 rounded-full bg-primary/10 blur-[50px] pointer-events-none group-hover:bg-primary/15 transition-all duration-500" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Candidate Details</h3>
+                <button 
+                  onClick={openEditModal}
+                  className="p-1.5 rounded-lg bg-white/5 hover:bg-primary/20 text-muted-foreground hover:text-primary border border-white/5 hover:border-primary/30 transition-all"
+                  title="Edit Profile details"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
               </div>
               
-              <div className="flex items-center gap-4 mb-6">
-                <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-primary/40 shrink-0">
-                  <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
-                  <button className="absolute inset-0 bg-black/40 text-white opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center" onClick={() => openEdit('profilePic')}>
-                    <Pencil className="w-3.5 h-3.5" />
+              {/* Profile Pic - Enlarged (w-32 h-32) and Beautifully Centered */}
+              <div className="flex flex-col items-center text-center mb-6">
+                <div className="relative w-32 h-32 rounded-full mb-4 group/avatar shadow-[0_0_25px_rgba(139,92,246,0.15)] ring-4 ring-primary/20 hover:ring-primary/50 transition-all duration-300">
+                  <div className="w-full h-full rounded-full overflow-hidden">
+                    <img 
+                      src={profilePic} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover/avatar:scale-105" 
+                    />
+                  </div>
+                  
+                  {/* Floating Action Trigger for Image Change */}
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="absolute bottom-1 right-1 bg-zinc-950/90 hover:bg-primary border border-white/10 text-white rounded-full p-2 shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center"
+                    title="Change Profile Photo"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    ) : (
+                      <Camera className="w-4 h-4 text-white" />
+                    )}
                   </button>
                 </div>
-                <div className="min-w-0">
-                  <div className="text-base font-bold truncate text-white">{fullName}</div>
-                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground truncate mt-0.5">
-                    <Mail className="h-3 w-3" /> {user?.email}
+                
+                <div className="max-w-full px-2">
+                  <h2 className="text-xl font-bold text-white tracking-tight leading-tight">{fullName}</h2>
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground mt-1 truncate">
+                    <Mail className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="truncate">{user?.email}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3 pt-3 border-t border-white/5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Career Goal</span>
-                  <div className="flex items-center gap-1.5 font-semibold text-white">
-                    <span>{careerGoal}</span>
-                    <button className="text-muted-foreground hover:text-white" onClick={() => openEdit('career_goal')}>
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+              {/* Profile Details List */}
+              <div className="space-y-4 pt-5 border-t border-white/5">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Career Goal</span>
+                  <span className="text-xs font-semibold text-white/90">{careerGoal}</span>
                 </div>
 
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Preferred Role</span>
-                  <div className="flex items-center gap-1.5 font-semibold text-white">
-                    <span>{preferredRole}</span>
-                    <button className="text-muted-foreground hover:text-white" onClick={() => openEdit('preferred_role')}>
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Preferred Role</span>
+                  <span className="text-xs font-semibold text-white/90">{preferredRole}</span>
                 </div>
 
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">LinkedIn</span>
-                  <div className="flex items-center gap-1.5 font-semibold text-white">
-                    <a href={linkedIn} target="_blank" rel="noreferrer" className="text-primary hover:underline max-w-[150px] truncate">{linkedIn?.replace(/^https?:\/\/(www\.)?/, '') || 'Link'}</a>
-                    <button className="text-muted-foreground hover:text-white" onClick={() => openEdit('linkedin')}>
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">GitHub</span>
-                  <div className="flex items-center gap-1.5 font-semibold text-white">
-                    <a href={github} target="_blank" rel="noreferrer" className="text-primary hover:underline max-w-[150px] truncate">{github?.replace(/^https?:\/\/(www\.)?/, '') || 'Link'}</a>
-                    <button className="text-muted-foreground hover:text-white" onClick={() => openEdit('github')}>
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Skills</span>
-                  <button className="text-muted-foreground hover:text-white" onClick={() => openEdit('skills')}>
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {Array.isArray(skills) && skills.length > 0 ? (
-                    skills.map((s: string) => (
-                      <span key={s} className="px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded text-[10px] font-semibold">{s}</span>
-                    ))
+                {/* Social Links */}
+                <div className="flex items-center gap-2 pt-2">
+                  {linkedIn ? (
+                    <a 
+                      href={linkedIn.startsWith("http") ? linkedIn : `https://${linkedIn}`} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 border border-[#0A66C2]/20 rounded-xl text-[10px] font-bold text-[#0A66C2] transition-colors"
+                    >
+                      <Linkedin className="h-3.5 w-3.5" /> LinkedIn
+                    </a>
                   ) : (
-                    <span className="text-[10px] text-muted-foreground">No custom skills loaded</span>
+                    <span className="px-3 py-1.5 bg-white/5 border border-white/5 rounded-xl text-[10px] text-muted-foreground font-semibold">No LinkedIn</span>
                   )}
+
+                  {github ? (
+                    <a 
+                      href={github.startsWith("http") ? github : `https://${github}`} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-white transition-colors"
+                    >
+                      <Github className="h-3.5 w-3.5" /> GitHub
+                    </a>
+                  ) : (
+                    <span className="px-3 py-1.5 bg-white/5 border border-white/5 rounded-xl text-[10px] text-muted-foreground font-semibold">No GitHub</span>
+                  )}
+                </div>
+
+                {/* Skills Section */}
+                <div className="pt-2">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block mb-2">My Skills</span>
+                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                    {Array.isArray(skills) && skills.length > 0 ? (
+                      skills.map((s: string) => (
+                        <span key={s} className="px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-lg text-[10px] font-bold transition-all hover:bg-primary/15">{s}</span>
+                      ))
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground italic">No custom skills loaded</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="text-[9px] text-muted-foreground mt-6 pt-3 border-t border-white/5">
-              Click pencil icons to edit metadata fields.
+            <div className="text-[9px] text-muted-foreground mt-6 pt-3 border-t border-white/5 text-center">
+              Configure details or change your profile photo to personalize Disha AI.
             </div>
           </div>
 
           {/* Card 2: Performance Statistics */}
-          <div className="glass-dark rounded-3xl p-6 border border-white/5 md:col-span-2 space-y-6">
-            <h3 className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Growth Statistics</h3>
-            
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="glass-dark rounded-3xl p-6 border border-white/5 md:col-span-2 space-y-6 flex flex-col justify-between">
+            <div>
+              <h3 className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-4">Growth Statistics</h3>
               
-              {/* Stat 1: Resume Score */}
-              <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center">
-                <Award className="h-5 w-5 text-primary mx-auto mb-2" />
-                <div className="text-xl font-extrabold text-foreground">{latestResumeScore}%</div>
-                <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">Resume Fit</div>
-              </div>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                
+                {/* Stat 1: Resume Score */}
+                <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center hover:border-primary/30 transition-colors">
+                  <Award className="h-5 w-5 text-primary mx-auto mb-2" />
+                  <div className="text-xl font-extrabold text-foreground">{latestResumeScore}%</div>
+                  <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">Resume Fit</div>
+                </div>
 
-              {/* Stat 2: ATS Score */}
-              <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center">
-                <FileCheck className="h-5 w-5 text-cyan-400 mx-auto mb-2" />
-                <div className="text-xl font-extrabold text-foreground">{latestAtsScore}%</div>
-                <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">ATS Match</div>
-              </div>
+                {/* Stat 2: ATS Score */}
+                <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center hover:border-cyan-400/30 transition-colors">
+                  <FileCheck className="h-5 w-5 text-cyan-400 mx-auto mb-2" />
+                  <div className="text-xl font-extrabold text-foreground">{latestAtsScore}%</div>
+                  <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">ATS Match</div>
+                </div>
 
-              {/* Stat 3: Quiz Score */}
-              <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center">
-                <Brain className="h-5 w-5 text-pink-400 mx-auto mb-2" />
-                <div className="text-xl font-extrabold text-foreground">{avgQuizScore}%</div>
-                <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">Avg Quiz</div>
-              </div>
+                {/* Stat 3: Quiz Score */}
+                <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center hover:border-pink-400/30 transition-colors">
+                  <Brain className="h-5 w-5 text-pink-400 mx-auto mb-2" />
+                  <div className="text-xl font-extrabold text-foreground">{avgQuizScore}%</div>
+                  <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">Avg Quiz</div>
+                </div>
 
-              {/* Stat 4: Lab Score */}
-              <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center">
-                <Database className="h-5 w-5 text-purple-400 mx-auto mb-2" />
-                <div className="text-xl font-extrabold text-foreground">{avgLabScore}%</div>
-                <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">Avg Lab</div>
-              </div>
+                {/* Stat 4: Lab Score */}
+                <div className="p-4 bg-white/5 border border-white/5 rounded-2xl text-center hover:border-purple-400/30 transition-colors">
+                  <Database className="h-5 w-5 text-purple-400 mx-auto mb-2" />
+                  <div className="text-xl font-extrabold text-foreground">{avgLabScore}%</div>
+                  <div className="text-[9px] text-muted-foreground uppercase font-bold mt-1">Avg Lab</div>
+                </div>
 
+              </div>
             </div>
 
             {/* Progress chart */}
-            <div>
+            <div className="mt-4">
               <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-3">Resume Score Progression</div>
               <div className="h-[140px] w-full">
                 {chart.length === 0 ? (
@@ -470,3 +709,25 @@ function Profile() {
     </AppShell>
   );
 }
+
+// Simple custom inline SVG component for close button since Lucide-react might not export X directly under some aliases
+function XIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  );
+}
+
