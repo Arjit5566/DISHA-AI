@@ -9,14 +9,14 @@ import {
   Sparkles, Info, AlertCircle, Database, FileSpreadsheet, MessageSquare, 
   Code, BarChart3, Calculator, Lock, Briefcase, GraduationCap, MapPin, 
   Building2, RefreshCw, AlertTriangle, ArrowRight, ArrowLeft, Terminal, 
-  BookOpen, Eye, Award, Check, FileCheck, Play
+  BookOpen, Eye, Award, Check, FileCheck, Play, Compass
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth";
 import { MagneticButton } from "@/components/effects/MagneticButton";
 import { DashboardScene } from "@/components/three/DashboardScene";
-import { getAnalysis, listMyAnalyses } from "@/lib/analysis.functions";
+import { getAnalysis, listMyAnalyses, getCareerNavigation, getAdzunaOpportunitiesForRole } from "@/lib/analysis.functions";
 import { Route } from "./dashboard";
 
 const ROLES = ["Data Analyst", "Data Scientist", "AI Engineer", "Full Stack Developer", "Software Engineer", "Web Developer", "Product Manager", "Machine Learning Engineer"];
@@ -67,6 +67,48 @@ export default function Dashboard() {
   const { data: history, refetch: refetchHistory } = useQuery({
     queryKey: ["my-analyses"],
     queryFn: () => fetchList(),
+  });
+
+  const [selectedAltRole, setSelectedAltRole] = useState<string | null>(null);
+  const [subTabAlt, setSubTabAlt] = useState<"job" | "internship">("job");
+
+  const runNavigation = useServerFn(getCareerNavigation);
+  const fetchAltOpps = useServerFn(getAdzunaOpportunitiesForRole);
+
+  // Query for career navigation options based on skills
+  const { data: navResult, isLoading: loadingNav } = useQuery({
+    queryKey: ["navigation-dashboard", activeId],
+    queryFn: () => runNavigation({ 
+      data: { 
+        skills: (analysis?.extracted_skills as string[]) || [], 
+        targetRole: analysis?.target_role || "Frontend Developer" 
+      } 
+    }),
+    enabled: !!analysis && !!activeId,
+  });
+
+  // Set default selected alt role when navResult loads
+  useEffect(() => {
+    if (navResult?.recommended_roles && navResult.recommended_roles.length > 0) {
+      if (!selectedAltRole) {
+        setSelectedAltRole(navResult.recommended_roles[0].role);
+      }
+    } else {
+      setSelectedAltRole(null);
+    }
+  }, [navResult, selectedAltRole]);
+
+  // Query for job/internship opportunities for selected recommended career role
+  const { data: altOppsData, isLoading: loadingAltOpps } = useQuery({
+    queryKey: ["alt-opportunities", activeId, selectedAltRole],
+    queryFn: () => fetchAltOpps({ 
+      data: { 
+        role: selectedAltRole!, 
+        skills: (analysis?.extracted_skills as string[]) || [], 
+        country: "in" 
+      } 
+    }),
+    enabled: !!analysis && !!activeId && !!selectedAltRole,
   });
 
   function pickFile(f?: File | null) {
@@ -177,15 +219,23 @@ export default function Dashboard() {
               
               {/* Card 1: Resume Readiness Score */}
               <motion.div 
-                whileHover={{ y: -4 }} 
-                className="card rounded-3xl p-6 border border-primary/20 shadow-[0_0_20px_rgba(139,92,246,0.1)] flex flex-col items-center text-center justify-between"
+                whileHover={{ y: -8, scale: 1.025, rotateX: 3, rotateY: -3 }}
+                style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                className="card rounded-3xl p-6 border border-primary/20 shadow-[0_0_20px_rgba(139,92,246,0.1)] flex flex-col items-center text-center justify-between hover:border-primary/45 hover:shadow-[0_0_30px_rgba(139,92,246,0.18)] transition-all duration-300"
               >
                 <div className="w-full flex items-center justify-between text-xs text-muted-foreground font-semibold mb-2">
-                  <span>Readiness Score</span>
-                  <Award className="h-4 w-4 text-primary" />
+                  <div className="flex items-center gap-2">
+                    <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-primary/20 to-violet-500/20 text-primary border border-primary/25 shadow-sm">
+                      <Award className="h-4 w-4" />
+                    </div>
+                    <span>Readiness Score</span>
+                  </div>
+                  <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-foreground cursor-pointer" />
                 </div>
-                <ScoreRing score={analysis.readiness_score} color="#8B5CF6" />
-                <div className="mt-4">
+                <div className="my-3">
+                  <ScoreRing score={analysis.readiness_score} color="#8B5CF6" />
+                </div>
+                <div className="mt-2">
                   <div className="text-sm font-bold text-foreground">
                     {analysis.readiness_score >= 80 ? "Competency Master" : analysis.readiness_score >= 50 ? "Ready to Apply" : "Needs Upskilling"}
                   </div>
@@ -199,15 +249,23 @@ export default function Dashboard() {
                 const atsScore = Math.max(45, Math.min(95, Math.round(analysis.readiness_score * 0.9 + 10)));
                 return (
                   <motion.div 
-                    whileHover={{ y: -4 }} 
-                    className="card rounded-3xl p-6 border border-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.1)] flex flex-col items-center text-center justify-between"
+                    whileHover={{ y: -8, scale: 1.025, rotateX: 3, rotateY: 3 }}
+                    style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                    className="card rounded-3xl p-6 border border-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.1)] flex flex-col items-center text-center justify-between hover:border-cyan-500/45 hover:shadow-[0_0_30px_rgba(6,182,212,0.18)] transition-all duration-300"
                   >
                     <div className="w-full flex items-center justify-between text-xs text-muted-foreground font-semibold mb-2">
-                      <span>ATS Score</span>
-                      <FileCheck className="h-4 w-4 text-cyan-400" />
+                      <div className="flex items-center gap-2">
+                        <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/25 shadow-sm">
+                          <FileCheck className="h-4 w-4" />
+                        </div>
+                        <span>ATS Score</span>
+                      </div>
+                      <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-foreground cursor-pointer" />
                     </div>
-                    <ScoreRing score={atsScore} color="#06B6D4" />
-                    <div className="mt-4">
+                    <div className="my-3">
+                      <ScoreRing score={atsScore} color="#06B6D4" />
+                    </div>
+                    <div className="mt-2">
                       <div className="text-sm font-bold text-foreground">
                         {atsScore >= 85 ? "Excellent Parsing" : atsScore >= 70 ? "Good Compatibility" : "Optimization Needed"}
                       </div>
@@ -219,19 +277,25 @@ export default function Dashboard() {
 
               {/* Card 3: Skills Found Card */}
               <motion.div 
-                whileHover={{ y: -4 }} 
-                className="card rounded-3xl p-6 border border-success/20 shadow-[0_0_20px_rgba(16,185,129,0.05)] md:col-span-1 flex flex-col justify-between"
+                whileHover={{ y: -8, scale: 1.025, rotateX: -3, rotateY: 3 }}
+                style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                className="card rounded-3xl p-6 border border-success/20 shadow-[0_0_20px_rgba(16,185,129,0.05)] md:col-span-1 flex flex-col justify-between hover:border-success/45 hover:shadow-[0_0_30px_rgba(16,185,129,0.12)] transition-all duration-300"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs text-muted-foreground font-semibold">Skills Found</span>
+                    <div className="flex items-center gap-2">
+                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-success/20 to-emerald-500/20 text-success border border-success/25 shadow-sm">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </div>
+                      <span className="text-xs text-muted-foreground font-semibold">Skills Found</span>
+                    </div>
                     <span className="text-xs bg-success/20 text-success px-2 py-0.5 rounded-full font-bold">
                       {Array.isArray(analysis.extracted_skills) ? analysis.extracted_skills.length : 0}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto scrollbar-none">
                     {Array.isArray(analysis.extracted_skills) && (analysis.extracted_skills as string[]).map((s, i) => (
-                      <span key={i} className="text-[10px] px-2 py-1 rounded-lg bg-success/10 text-success border border-success/20 font-medium">
+                      <span key={i} className="text-[10px] px-2 py-1 rounded-lg bg-success/10 text-success border border-success/20 font-medium hover:bg-success/20 transition-colors">
                         {s}
                       </span>
                     ))}
@@ -244,19 +308,25 @@ export default function Dashboard() {
 
               {/* Card 4: Missing Skills Card */}
               <motion.div 
-                whileHover={{ y: -4 }} 
-                className="card rounded-3xl p-6 border border-destructive/20 shadow-[0_0_20px_rgba(239,68,68,0.05)] md:col-span-1 flex flex-col justify-between"
+                whileHover={{ y: -8, scale: 1.025, rotateX: -3, rotateY: -3 }}
+                style={{ transformStyle: "preserve-3d", perspective: 1000 }}
+                className="card rounded-3xl p-6 border border-destructive/20 shadow-[0_0_20px_rgba(239,68,68,0.05)] md:col-span-1 flex flex-col justify-between hover:border-destructive/45 hover:shadow-[0_0_30px_rgba(239,68,68,0.12)] transition-all duration-300"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs text-muted-foreground font-semibold">Missing Skills</span>
+                    <div className="flex items-center gap-2">
+                      <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-destructive/20 to-red-500/20 text-destructive border border-destructive/25 shadow-sm">
+                        <AlertCircle className="h-4 w-4" />
+                      </div>
+                      <span className="text-xs text-muted-foreground font-semibold">Missing Skills</span>
+                    </div>
                     <span className="text-xs bg-destructive/20 text-destructive px-2 py-0.5 rounded-full font-bold">
                       {Array.isArray(analysis.missing_skills) ? analysis.missing_skills.length : 0}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto scrollbar-none">
-                                          {Array.isArray(analysis.missing_skills) && (analysis.missing_skills as string[]).map((s, i) => (
-                      <span key={i} className="text-[10px] px-2 py-1 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 font-medium">
+                    {Array.isArray(analysis.missing_skills) && (analysis.missing_skills as string[]).map((s, i) => (
+                      <span key={i} className="text-[10px] px-2 py-1 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 font-medium hover:bg-destructive/20 transition-colors">
                         {s}
                       </span>
                     ))}
@@ -269,165 +339,151 @@ export default function Dashboard() {
 
             </div>
 
-            {/* Middle Section: Skills Gap Analysis & ATS Compatibility */}
-            <div className="grid gap-6 md:grid-cols-2">
-              
-              {/* Skills Gap Analysis */}
-              <div className="card rounded-3xl p-6 border border-border">
-                <div className="flex items-center gap-2 mb-4">
-                  <Database className="h-5 w-5 text-primary" />
-                  <h3 className="text-base font-bold">Skills Gap Analysis</h3>
+            {/* Alternative Career Matcher & Opportunities */}
+            {navResult && navResult.recommended_roles && navResult.recommended_roles.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="card rounded-3xl p-6 border border-primary/15 shadow-[0_0_25px_rgba(139,92,246,0.06)]"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Compass className="h-5 w-5 text-primary" />
+                  <h3 className="text-base font-bold">Roles You Can Apply For Right Now</h3>
                 </div>
 
                 <p className="text-xs text-muted-foreground mb-6">
-                  Comparison profile between your matching credentials and key technologies in demand for <span className="text-foreground font-medium">{analysis.target_role}</span>.
+                  Apart from <span className="text-primary font-semibold">{analysis.target_role}</span>, your resume skills also match these roles. Select one to explore live job and internship openings.
                 </p>
 
-                <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
-                  {/* Found matches */}
-                  {Array.isArray(analysis.extracted_skills) && (analysis.extracted_skills as string[]).map((s) => (
-                    <div key={s} className="flex items-center justify-between bg-muted/45 rounded-xl px-4 py-2.5 border border-border">
-                      <div className="flex items-center gap-3">
-                        <div className="grid h-6 w-6 place-items-center rounded-lg bg-success/10 text-success">
-                          {getSkillIcon(s)}
-                        </div>
-                        <span className="text-xs font-medium">{s}</span>
-                      </div>
-                      <span className="text-[10px] text-success font-semibold flex items-center gap-1">
-                        <Check className="h-3.5 w-3.5" /> Present
-                      </span>
-                    </div>
-                  ))}
-
-                  {/* Missing skills */}
-                  {Array.isArray(analysis.missing_skills) && (analysis.missing_skills as string[]).map((s, i) => (
-                    <div key={i} className="flex items-center justify-between bg-muted/45 rounded-xl px-4 py-2.5 border border-border">
-                      <div className="flex items-center gap-3">
-                        <div className="grid h-6 w-6 place-items-center rounded-lg bg-destructive/10 text-destructive">
-                          {getSkillIcon(s)}
-                        </div>
-                        <span className="text-xs font-medium text-foreground/70 dark:text-white/70">{s}</span>
-                      </div>
-                      <span className="text-[10px] text-destructive font-semibold flex items-center gap-1">
-                        <X className="h-3.5 w-3.5" /> Missing
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* ATS Compatibility */}
-              <div className="card rounded-3xl p-6 border border-border">
-                <div className="flex items-center gap-2 mb-4">
-                  <FileText className="h-5 w-5 text-cyan-400" />
-                  <h3 className="text-base font-bold">ATS Compatibility</h3>
-                </div>
-
-                <p className="text-xs text-muted-foreground mb-6">
-                  Automated checks confirming if your document structure complies with standardized Applicant Tracking Systems.
-                </p>
-
-                <div className="space-y-3">
-                  <AtsCheckRow label="Contact Info (Email, Github, LinkedIn)" status="pass" details="Validated contact boundaries" />
-                  <AtsCheckRow label="Document Structure & Sections" status="pass" details="Clear headers (Experience, Education)" />
-                  <AtsCheckRow label="File Formatting (.pdf format)" status="pass" details="Optimal text layer readability" />
-                  <AtsCheckRow label="Action & Metric Verbs" status="warn" details="Recommend increasing numerical impacts by 12%" />
-                  <AtsCheckRow label="Bullet Formatting & Syntax" status="pass" details="Correct character mapping" />
-                  <AtsCheckRow label="Formatting Overlap (Images/Graphics)" status="pass" details="No complex graphic overlays detected" />
-                </div>
-              </div>
-
-            </div>
-
-            {/* Bottom Row: Learning Recommendations & Resume Insights */}
-            <div className="grid gap-6 md:grid-cols-3">
-              
-              {/* Resume Insights (left col) */}
-              <div className="card rounded-3xl p-6 border border-border md:col-span-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Terminal className="h-5 w-5 text-secondary" />
-                    <h3 className="text-base font-bold">Resume Insights</h3>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Evaluation breakdown of your current resume structure.
-                  </p>
-
-                  <div className="space-y-4">
-                    <div>
-                      <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Strengths</div>
-                      <ul className="text-xs mt-1.5 space-y-1 text-foreground/90 dark:text-white/90">
-                        <li className="flex gap-1.5 items-start"><Check className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" /> High volume of core developer keywords</li>
-                        <li className="flex gap-1.5 items-start"><Check className="h-3.5 w-3.5 text-success shrink-0 mt-0.5" /> Clean workspace chronology layout</li>
-                      </ul>
-                    </div>
-
-                    <div>
-                      <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Weaknesses & Recommendations</div>
-                      <ul className="text-xs mt-1.5 space-y-1.5 text-foreground/80 dark:text-white/70">
-                        <li className="flex gap-1.5 items-start"><X className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" /> Lack of metrics-oriented outcomes</li>
-                        <li className="flex gap-1.5 items-start"><X className="h-3.5 w-3.5 text-destructive shrink-0 mt-0.5" /> Missing technical skills like: {Array.isArray(analysis.missing_skills) ? analysis.missing_skills.slice(0, 2).join(", ") : "N/A"}</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-border text-[10px] text-muted-foreground italic">
-                  Tip: Expand the roadmap below to learn missing skills.
-                </div>
-              </div>
-
-              {/* Learning Recommendations (right col - spanning 2) */}
-              <div className="card rounded-3xl p-6 border border-border md:col-span-2">
-                <div className="flex items-center gap-2 mb-4">
-                  <BookOpen className="h-5 w-5 text-primary" />
-                  <h3 className="text-base font-bold">Learning Recommendations</h3>
-                </div>
-
-                <p className="text-xs text-muted-foreground mb-6">
-                  Recommended educational links tailored to teach the missing skills discovered in your evaluation.
-                </p>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {Array.isArray(analysis.resources) && analysis.resources.slice(0, 4).map((r: any, idx: number) => {
-                    const theme = THEMES[idx % THEMES.length];
-                    const Icon = theme.icon;
-                    return (
-                      <motion.div 
-                        key={idx} 
-                        whileHover={{ y: -3 }}
-                        className="bg-muted/40 border border-border rounded-2xl p-4 flex flex-col justify-between"
-                      >
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold uppercase">
-                              {r.provider}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">{r.skill}</span>
-                          </div>
-                          <h4 className="text-xs font-bold text-foreground line-clamp-1">{r.title}</h4>
-                          <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">Master {r.skill} with interactive projects and lectures.</p>
-                        </div>
-
-                        <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground">Self-Paced</span>
-                          <a 
-                            href={r.url} 
-                            target="_blank" 
-                            rel="noreferrer" 
-                            className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline"
+                <div className="grid gap-6 lg:grid-cols-3">
+                  {/* Left Column: Recommended Roles List */}
+                  <div className="lg:col-span-1 lg:border-r lg:border-border/40 pr-0 lg:pr-6">
+                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Best-Fit Roles</h4>
+                    <div className="space-y-2.5 max-h-[320px] overflow-y-auto pr-1 scrollbar-thin">
+                      {navResult.recommended_roles.map((r) => {
+                        const isActive = selectedAltRole === r.role;
+                        return (
+                          <motion.div 
+                            key={r.role}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setSelectedAltRole(r.role)}
+                            className={`p-3.5 rounded-2xl border text-left cursor-pointer transition-all ${
+                              isActive 
+                                ? "border-primary bg-primary/10 shadow-[0_0_15px_rgba(139,92,246,0.12)]" 
+                                : "border-border bg-background/50 hover:border-primary/40 hover:bg-muted/15"
+                            }`}
                           >
-                            Go to course <ArrowRight className="h-3 w-3" />
-                          </a>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className={`text-xs font-bold truncate ${isActive ? "text-primary" : "text-foreground"}`}>{r.role}</span>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 ${
+                                r.match_percentage >= 80 
+                                  ? "bg-success/20 text-success" 
+                                  : r.match_percentage >= 60 
+                                  ? "bg-blue-500/20 text-blue-500" 
+                                  : "bg-muted text-muted-foreground"
+                              }`}>
+                                {r.match_percentage}%
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{r.message}</p>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-            </div>
+                  {/* Right Column: Matched Opportunities for the active role */}
+                  <div className="lg:col-span-2 flex flex-col min-h-[300px]">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 border-b border-border/40 pb-3">
+                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                        Openings for <span className="text-primary normal-case font-bold">{selectedAltRole || "—"}</span>
+                      </h4>
+                      
+                      {/* Sub tabs: Jobs vs Internships */}
+                      <div className="flex items-center gap-1 bg-muted/40 border border-border/40 rounded-xl p-0.5">
+                        <button
+                          onClick={() => setSubTabAlt("job")}
+                          className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+                            subTabAlt === "job"
+                              ? "bg-primary text-white shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <Briefcase className="h-3 w-3" /> Jobs
+                        </button>
+                        <button
+                          onClick={() => setSubTabAlt("internship")}
+                          className={`px-3 py-1 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1 cursor-pointer ${
+                            subTabAlt === "internship"
+                              ? "bg-primary text-white shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <GraduationCap className="h-3 w-3" /> Internships
+                        </button>
+                      </div>
+                    </div>
+
+                    {loadingAltOpps ? (
+                      <div className="grid h-48 place-items-center">
+                        <div className="text-center space-y-2">
+                          <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto" />
+                          <p className="text-[11px] text-muted-foreground">Fetching opportunities...</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2 max-h-[320px] overflow-y-auto pr-1 scrollbar-thin">
+                        {altOppsData?.opportunities && altOppsData.opportunities.filter(o => o.type === subTabAlt).length > 0 ? (
+                          altOppsData.opportunities
+                            .filter(o => o.type === subTabAlt)
+                            .map((opp) => (
+                              <motion.div 
+                                key={opp.id}
+                                whileHover={{ y: -2 }}
+                                className="p-4 rounded-2xl border border-border bg-background/55 hover:border-primary/25 transition-all flex flex-col justify-between group"
+                              >
+                                <div>
+                                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                                    <h5 className="text-xs font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">{opp.title}</h5>
+                                    <span className="text-[10px] font-extrabold text-primary shrink-0">{opp.matchScore}%</span>
+                                  </div>
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-muted-foreground">
+                                    <span className="font-semibold text-foreground/80">{opp.company}</span>
+                                    <span>•</span>
+                                    <span className="flex items-center gap-0.5"><MapPin className="h-2.5 w-2.5" /> {opp.location}</span>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground mt-1.5 line-clamp-1 italic">"{opp.matchReason}"</p>
+                                </div>
+
+                                <div className="mt-3 pt-2.5 border-t border-border/40 flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-success">{opp.salary}</span>
+                                  <a 
+                                    href={opp.redirectUrl} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 text-[10px] font-bold text-primary hover:underline"
+                                  >
+                                    Apply <ArrowRight className="h-2.5 w-2.5" />
+                                  </a>
+                                </div>
+                              </motion.div>
+                            ))
+                        ) : (
+                          <div className="col-span-2 text-center py-10">
+                            <Briefcase className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                            <p className="text-xs text-muted-foreground">No openings found for this category.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+
 
             {/* Career Roadmap Timeline */}
             <div className="card rounded-3xl p-6 border border-border">

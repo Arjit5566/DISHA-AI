@@ -58,11 +58,11 @@ export const analyzeResume = createServerFn({ method: "POST" })
 
     let parsed: AnalysisResult;
 
-    if (geminiKey && geminiKey !== "YOUR_GEMINI_API_KEY") {
-      // Use direct Google Gemini API call with the user's key
-      const prompt = `Target role: ${data.targetRole}\n\n--- RESUME ---\n${data.resumeText}\n--- END RESUME ---\n\nReturn the JSON now.`;
-      
-      try {
+    try {
+      if (geminiKey && geminiKey !== "YOUR_GEMINI_API_KEY") {
+        // Use direct Google Gemini API call with the user's key
+        const prompt = `Target role: ${data.targetRole}\n\n--- RESUME ---\n${data.resumeText}\n--- END RESUME ---\n\nReturn the JSON now.`;
+        
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${geminiKey}`,
           {
@@ -93,15 +93,11 @@ export const analyzeResume = createServerFn({ method: "POST" })
         }
 
         parsed = JSON.parse(stripFences(responseText)) as AnalysisResult;
-      } catch (err: unknown) {
-        throw new Error("Gemini AI analysis failed: " + (err instanceof Error ? err.message : String(err)));
-      }
-    } else if (lovableKey) {
-      // Fallback to Lovable AI Gateway if configured
-      const gateway = createLovableAiGatewayProvider(lovableKey);
-      const prompt = `Target role: ${data.targetRole}\n\n--- RESUME ---\n${data.resumeText}\n--- END RESUME ---\n\nReturn the JSON now.`;
+      } else if (lovableKey) {
+        // Fallback to Lovable AI Gateway if configured
+        const gateway = createLovableAiGatewayProvider(lovableKey);
+        const prompt = `Target role: ${data.targetRole}\n\n--- RESUME ---\n${data.resumeText}\n--- END RESUME ---\n\nReturn the JSON now.`;
 
-      try {
         const { text } = await generateText({
           model: gateway("google/gemini-3-flash-preview"),
           system: SYS,
@@ -109,14 +105,12 @@ export const analyzeResume = createServerFn({ method: "POST" })
           temperature: 0.4,
         });
         parsed = JSON.parse(stripFences(text)) as AnalysisResult;
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes("429")) throw new Error("AI rate limit reached. Please try again in a moment.");
-        if (msg.includes("402")) throw new Error("AI credits exhausted. Please add credits in Settings → Workspace.");
-        throw new Error("AI analysis failed: " + msg);
+      } else {
+        throw new Error("AI is not configured. Please add GEMINI_API_KEY to your .env file.");
       }
-    } else {
-      throw new Error("AI is not configured. Please add GEMINI_API_KEY to your .env file.");
+    } catch (err: unknown) {
+      console.warn("AI resume analysis failed, falling back to local rule-based simulation analysis:", err);
+      parsed = getFallbackAnalysis(data.resumeText, data.targetRole);
     }
 
     // sanitize
@@ -278,6 +272,163 @@ export interface AdzunaJob {
   type: "job" | "internship";
 }
 
+async function fetchAdzunaJobsAndInternships(
+  targetRole: string,
+  userSkills: string[],
+  country: string
+): Promise<{ opportunities: AdzunaJob[]; isMock: boolean }> {
+  const appId = process.env.ADZUNA_APP_ID;
+  const appKey = process.env.ADZUNA_APP_KEY;
+  const targetCountry = country.toLowerCase();
+
+  // Local function to clean HTML tags from title/description
+  const cleanHtml = (text: string): string => {
+    if (!text) return "";
+    return text.replace(/<\/?[^>]+(>|$)/g, "").trim();
+  };
+
+  // Local function to format salary based on country
+  const formatSalary = (min?: number, max?: number, c: string = "in") => {
+    if (!min && !max) return "Competitive Salary";
+    
+    const currency = c === "in" ? "₹" : c === "us" ? "$" : c === "gb" ? "£" : "$";
+    
+    const formatNum = (num: number) => {
+      if (c === "in") {
+        if (num >= 100000) {
+          return `${(num / 100000).toFixed(1)}L`;
+        }
+        if (num >= 1000) {
+          return `${(num / 1000).toFixed(0)}k`;
+        }
+      } else {
+        if (num >= 1000) {
+          return `${(num / 1000).toFixed(0)}k`;
+        }
+      }
+      return num.toLocaleString();
+    };
+
+    const period = c === "in" && (min || 0) < 100000 ? "/mo" : " PA";
+    
+    if (min && max) {
+      return `${currency}${formatNum(min)} - ${currency}${formatNum(max)}${period}`;
+    }
+    return `${currency}${formatNum(min || max!)}${period}`;
+  };
+
+  // Local function to calculate match score
+  const calculateMatch = (title: string, description: string) => {
+    const t = title.toLowerCase();
+    const d = description.toLowerCase();
+    
+    const matched = userSkills.filter(skill => {
+      const s = skill.toLowerCase();
+      return t.includes(s) || d.includes(s);
+    });
+    
+    let baseScore = 55;
+    const targetKeywords = targetRole.toLowerCase().split(/\s+/);
+    const keywordMatches = targetKeywords.filter(kw => kw.length > 2 && t.includes(kw));
+    baseScore += (keywordMatches.length / Math.max(1, targetKeywords.length)) * 20;
+    
+    const score = Math.min(98, Math.round(baseScore + matched.length * 8));
+    const reason = matched.length > 0
+      ? `Matches your skill${matched.length > 1 ? "s" : ""}: ${matched.slice(0, 3).join(", ")}`
+      : `Good alignment with your target role: ${targetRole}`;
+      
+    return { score, reason };
+  };
+
+  // If API credentials are not set, return mock data
+  if (!appId || !appKey || appId === "your_adzuna_app_id" || appKey === "your_adzuna_app_key") {
+    console.log("Adzuna API keys not set. Returning high-fidelity mock data.");
+    return {
+      opportunities: generateMockOpportunities(targetRole, userSkills, targetCountry, formatSalary),
+      isMock: true
+    };
+  }
+
+  try {
+    // Fetch jobs
+    const jobsUrl = `https://api.adzuna.com/v1/api/jobs/${targetCountry}/search/1?app_id=${appId}&app_key=${appKey}&what=${encodeURIComponent(targetRole)}&results_per_page=6&content-type=application/json`;
+    // Fetch internships
+    const internshipsUrl = `https://api.adzuna.com/v1/api/jobs/${targetCountry}/search/1?app_id=${appId}&app_key=${appKey}&what=${encodeURIComponent(targetRole + " internship")}&results_per_page=6&content-type=application/json`;
+
+    const [jobsRes, internshipsRes] = await Promise.all([
+      fetch(jobsUrl),
+      fetch(internshipsUrl)
+    ]);
+
+    const jobsData = jobsRes.ok ? await jobsRes.json() : { results: [] };
+    const internshipsData = internshipsRes.ok ? await internshipsRes.json() : { results: [] };
+
+    const opportunities: AdzunaJob[] = [];
+
+    // Process jobs
+    if (jobsData.results) {
+      for (const job of jobsData.results) {
+        const title = cleanHtml(job.title);
+        const desc = cleanHtml(job.description);
+        const { score, reason } = calculateMatch(title, desc);
+        opportunities.push({
+          id: job.id || String(Math.random()),
+          title,
+          company: job.company?.display_name || "Confidential",
+          location: job.location?.display_name || "Multiple Locations",
+          salary: formatSalary(job.salary_min, job.salary_max, targetCountry),
+          redirectUrl: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(title + " " + (job.company?.display_name || ""))}`,
+          created: job.created || new Date().toISOString(),
+          matchScore: score,
+          matchReason: reason,
+          type: "job"
+        });
+      }
+    }
+
+    // Process internships
+    if (internshipsData.results) {
+      for (const intern of internshipsData.results) {
+        const title = cleanHtml(intern.title);
+        const desc = cleanHtml(intern.description);
+        const { score, reason } = calculateMatch(title, desc);
+        opportunities.push({
+          id: intern.id || String(Math.random()),
+          title,
+          company: intern.company?.display_name || "Confidential",
+          location: intern.location?.display_name || "Multiple Locations",
+          salary: formatSalary(intern.salary_min, intern.salary_max, targetCountry),
+          redirectUrl: `https://www.indeed.com/jobs?q=${encodeURIComponent(title + " " + (intern.company?.display_name || ""))}`,
+          created: intern.created || new Date().toISOString(),
+          matchScore: score,
+          matchReason: reason,
+          type: "internship"
+        });
+      }
+    }
+
+    if (opportunities.length === 0) {
+      return {
+        opportunities: generateMockOpportunities(targetRole, userSkills, targetCountry, formatSalary),
+        isMock: true
+      };
+    }
+
+    opportunities.sort((a, b) => b.matchScore - a.matchScore);
+
+    return {
+      opportunities,
+      isMock: false
+    };
+  } catch (err) {
+    console.error("Failed to fetch jobs from Adzuna:", err);
+    return {
+      opportunities: generateMockOpportunities(targetRole, userSkills, targetCountry, formatSalary),
+      isMock: true
+    };
+  }
+}
+
 export const getAdzunaOpportunities = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
@@ -300,161 +451,24 @@ export const getAdzunaOpportunities = createServerFn({ method: "POST" })
       throw new Error(error?.message ?? "Analysis not found");
     }
 
-    const targetRole = analysis.target_role;
-    const userSkills = (analysis.extracted_skills as string[]) || [];
+    return fetchAdzunaJobsAndInternships(
+      analysis.target_role,
+      (analysis.extracted_skills as string[]) || [],
+      data.country
+    );
+  });
 
-    const appId = process.env.ADZUNA_APP_ID;
-    const appKey = process.env.ADZUNA_APP_KEY;
-    const country = data.country.toLowerCase();
-
-    // Local function to clean HTML tags from title/description
-    const cleanHtml = (text: string): string => {
-      if (!text) return "";
-      return text.replace(/<\/?[^>]+(>|$)/g, "").trim();
-    };
-
-    // Local function to format salary based on country
-    const formatSalary = (min?: number, max?: number, c: string = "in") => {
-      if (!min && !max) return "Competitive Salary";
-      
-      const currency = c === "in" ? "₹" : c === "us" ? "$" : c === "gb" ? "£" : "$";
-      
-      const formatNum = (num: number) => {
-        if (c === "in") {
-          if (num >= 100000) {
-            return `${(num / 100000).toFixed(1)}L`;
-          }
-          if (num >= 1000) {
-            return `${(num / 1000).toFixed(0)}k`;
-          }
-        } else {
-          if (num >= 1000) {
-            return `${(num / 1000).toFixed(0)}k`;
-          }
-        }
-        return num.toLocaleString();
-      };
-
-      const period = c === "in" && (min || 0) < 100000 ? "/mo" : " PA";
-      
-      if (min && max) {
-        return `${currency}${formatNum(min)} - ${currency}${formatNum(max)}${period}`;
-      }
-      return `${currency}${formatNum(min || max!)}${period}`;
-    };
-
-    // Local function to calculate match score
-    const calculateMatch = (title: string, description: string) => {
-      const t = title.toLowerCase();
-      const d = description.toLowerCase();
-      
-      const matched = userSkills.filter(skill => {
-        const s = skill.toLowerCase();
-        return t.includes(s) || d.includes(s);
-      });
-      
-      let baseScore = 55;
-      const targetKeywords = targetRole.toLowerCase().split(/\s+/);
-      const keywordMatches = targetKeywords.filter(kw => kw.length > 2 && t.includes(kw));
-      baseScore += (keywordMatches.length / Math.max(1, targetKeywords.length)) * 20;
-      
-      const score = Math.min(98, Math.round(baseScore + matched.length * 8));
-      const reason = matched.length > 0
-        ? `Matches your skill${matched.length > 1 ? "s" : ""}: ${matched.slice(0, 3).join(", ")}`
-        : `Good alignment with your target role: ${targetRole}`;
-        
-      return { score, reason };
-    };
-
-    // If API credentials are not set, return mock data
-    if (!appId || !appKey || appId === "your_adzuna_app_id" || appKey === "your_adzuna_app_key") {
-      console.log("Adzuna API keys not set. Returning high-fidelity mock data.");
-      return {
-        opportunities: generateMockOpportunities(targetRole, userSkills, country, formatSalary),
-        isMock: true
-      };
-    }
-
-    try {
-      // Fetch jobs
-      const jobsUrl = `https://api.adzuna.com/v1/api/jobs/${country}/search/1?app_id=${appId}&app_key=${appKey}&what=${encodeURIComponent(targetRole)}&results_per_page=6&content-type=application/json`;
-      // Fetch internships
-      const internshipsUrl = `https://api.adzuna.com/v1/api/jobs/${country}/search/1?app_id=${appId}&app_key=${appKey}&what=${encodeURIComponent(targetRole + " internship")}&results_per_page=6&content-type=application/json`;
-
-      const [jobsRes, internshipsRes] = await Promise.all([
-        fetch(jobsUrl),
-        fetch(internshipsUrl)
-      ]);
-
-      const jobsData = jobsRes.ok ? await jobsRes.json() : { results: [] };
-      const internshipsData = internshipsRes.ok ? await internshipsRes.json() : { results: [] };
-
-      const opportunities: AdzunaJob[] = [];
-
-      // Process jobs
-      if (jobsData.results) {
-        for (const job of jobsData.results) {
-          const title = cleanHtml(job.title);
-          const desc = cleanHtml(job.description);
-          const { score, reason } = calculateMatch(title, desc);
-          opportunities.push({
-            id: job.id || String(Math.random()),
-            title,
-            company: job.company?.display_name || "Confidential",
-            location: job.location?.display_name || "Multiple Locations",
-            salary: formatSalary(job.salary_min, job.salary_max, country),
-            redirectUrl: `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(title + " " + (job.company?.display_name || ""))}`,
-            created: job.created || new Date().toISOString(),
-            matchScore: score,
-            matchReason: reason,
-            type: "job"
-          });
-        }
-      }
-
-      // Process internships
-      if (internshipsData.results) {
-        for (const intern of internshipsData.results) {
-          const title = cleanHtml(intern.title);
-          const desc = cleanHtml(intern.description);
-          const { score, reason } = calculateMatch(title, desc);
-          opportunities.push({
-            id: intern.id || String(Math.random()),
-            title,
-            company: intern.company?.display_name || "Confidential",
-            location: intern.location?.display_name || "Multiple Locations",
-            salary: formatSalary(intern.salary_min, intern.salary_max, country),
-            redirectUrl: `https://www.indeed.com/jobs?q=${encodeURIComponent(title + " " + (intern.company?.display_name || ""))}`,
-            created: intern.created || new Date().toISOString(),
-            matchScore: score,
-            matchReason: reason,
-            type: "internship"
-          });
-        }
-      }
-
-      // If we got nothing from the API, fall back to mock data
-      if (opportunities.length === 0) {
-        return {
-          opportunities: generateMockOpportunities(targetRole, userSkills, country, formatSalary),
-          isMock: true
-        };
-      }
-
-      // Sort by match score descending
-      opportunities.sort((a, b) => b.matchScore - a.matchScore);
-
-      return {
-        opportunities,
-        isMock: false
-      };
-    } catch (err) {
-      console.error("Failed to fetch jobs from Adzuna:", err);
-      return {
-        opportunities: generateMockOpportunities(targetRole, userSkills, country, formatSalary),
-        isMock: true
-      };
-    }
+export const getAdzunaOpportunitiesForRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      role: z.string(),
+      skills: z.array(z.string()),
+      country: z.string().min(2).max(3).default("in"),
+    }).parse(input)
+  )
+  .handler(async ({ data }): Promise<{ opportunities: AdzunaJob[]; isMock: boolean }> => {
+    return fetchAdzunaJobsAndInternships(data.role, data.skills, data.country);
   });
 
 // Helper function to generate mock opportunities when keys are not configured or request fails
@@ -643,4 +657,276 @@ export const askChatbot = createServerFn({ method: "POST" })
       throw new Error("No AI configuration found. Chatbot falling back to offline knowledge base.");
     }
   });
+
+export interface RecommendedRole {
+  role: string;
+  match_percentage: number;
+  matched_skills: string[];
+  message: string;
+}
+
+export interface NavigationResult {
+  target_comparison: {
+    readiness_score: number;
+    matching_skills: string[];
+    missing_skills: string[];
+  };
+  recommended_roles: RecommendedRole[];
+}
+
+const NAV_SYS = `You are Disha AI, an expert career navigation advisor.
+You will receive a list of candidate's skills and a target career role.
+
+Your task is to:
+1. Compare the candidate's skills with the required skills for the target role. Calculate a match percentage (0-100), identify matching skills, and identify missing skills.
+2. Recommend 3 to 5 alternative or related career roles that best match the candidate's current skills. For each recommended role, calculate the match percentage, list matched skills, and provide a short encouraging message like "You are ready to apply for this role." or "You are close! Gain a few more skills."
+
+Return ONLY valid JSON matching this TypeScript shape (no markdown fences, no comments, no extra text):
+{
+  "target_comparison": {
+    "readiness_score": number,
+    "matching_skills": string[],
+    "missing_skills": string[]
+  },
+  "recommended_roles": [
+    {
+      "role": string,
+      "match_percentage": number,
+      "matched_skills": string[],
+      "message": string
+    }
+  ]
+}`;
+
+export const getCareerNavigation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({
+      skills: z.array(z.string()),
+      targetRole: z.string().min(2).max(120),
+    }).parse(input)
+  )
+  .handler(async ({ data }): Promise<NavigationResult> => {
+    const geminiKey = process.env.GEMINI_API_KEY;
+    const lovableKey = process.env.LOVABLE_API_KEY;
+
+    const prompt = `Candidate Skills: ${data.skills.join(", ")}\nTarget Role: ${data.targetRole}\n\nGenerate career navigation JSON.`;
+
+    let parsed: NavigationResult;
+
+    try {
+      if (geminiKey && geminiKey !== "YOUR_GEMINI_API_KEY") {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${geminiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              systemInstruction: { parts: [{ text: NAV_SYS }] },
+              generationConfig: { responseMimeType: "application/json", temperature: 0.4 },
+            }),
+          }
+        );
+        if (!response.ok) throw new Error("Gemini API error");
+        const resData = await response.json();
+        const text = resData?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error("Empty AI response");
+        parsed = JSON.parse(stripFences(text)) as NavigationResult;
+      } else if (lovableKey) {
+        const gateway = createLovableAiGatewayProvider(lovableKey);
+        const { text } = await generateText({
+          model: gateway("google/gemini-3-flash-preview"),
+          system: NAV_SYS,
+          prompt,
+          temperature: 0.4,
+        });
+        parsed = JSON.parse(stripFences(text)) as NavigationResult;
+      } else {
+        throw new Error("No AI key configured.");
+      }
+    } catch (e) {
+      console.error("AI Career Navigation generation failed, falling back to rule-based matchmaking", e);
+      parsed = getFallbackNavigation(data.skills, data.targetRole);
+    }
+
+    // Sanitize output
+    parsed.target_comparison.readiness_score = Math.max(0, Math.min(100, parsed.target_comparison.readiness_score || 0));
+    parsed.target_comparison.matching_skills = parsed.target_comparison.matching_skills || [];
+    parsed.target_comparison.missing_skills = parsed.target_comparison.missing_skills || [];
+    
+    parsed.recommended_roles = (parsed.recommended_roles || []).map(r => ({
+      role: r.role || "Unknown Role",
+      match_percentage: Math.max(0, Math.min(100, r.match_percentage || 0)),
+      matched_skills: r.matched_skills || [],
+      message: r.message || "Good role match for your background."
+    }));
+
+    return parsed;
+  });
+
+function getFallbackNavigation(userSkills: string[], targetRole: string): NavigationResult {
+  const ROLE_SKILLS: Record<string, string[]> = {
+    "Frontend Developer": ["React", "HTML", "CSS", "JavaScript", "TypeScript", "Tailwind CSS", "Next.js", "Redux", "Git"],
+    "Full Stack Developer": ["React", "Node.js", "Express", "MongoDB", "SQL", "JavaScript", "TypeScript", "HTML", "CSS", "Git"],
+    "Data Scientist": ["Python", "R", "SQL", "Machine Learning", "Pandas", "NumPy", "Statistics", "Data Visualization", "Jupyter"],
+    "Data Analyst": ["SQL", "Excel", "Tableau", "Power BI", "Python", "Data Visualization", "Statistics", "Reporting"],
+    "AI Engineer": ["Python", "Machine Learning", "Deep Learning", "TensorFlow", "PyTorch", "NLP", "LLMs", "AI APIs"],
+    "Software Engineer": ["Java", "Python", "C++", "Data Structures", "Algorithms", "Git", "SQL", "Software Design"],
+    "DevOps Engineer": ["Docker", "Kubernetes", "AWS", "CI/CD", "Linux", "Terraform", "Git", "Bash", "Monitoring"],
+    "Product Manager": ["Product Strategy", "Agile", "Scrum", "User Research", "Roadmapping", "SQL", "Data Analytics", "Communication"],
+    "QA Engineer": ["Manual Testing", "Automation Testing", "Selenium", "Jest", "Cypress", "Git", "Bug Reporting", "QA Methodologies"]
+  };
+
+  const cleanSkills = userSkills.map(s => s.toLowerCase());
+
+  const getMatchMetrics = (reqSkills: string[]) => {
+    const matched = reqSkills.filter(s => cleanSkills.some(us => us.includes(s.toLowerCase()) || s.toLowerCase().includes(us)));
+
+    const actualMissing = reqSkills.filter(s => !cleanSkills.some(us => us.includes(s.toLowerCase()) || s.toLowerCase().includes(us)));
+    const pct = reqSkills.length > 0 ? Math.round((matched.length / reqSkills.length) * 100) : 0;
+    return { matched, missing: actualMissing, pct };
+  };
+
+  // 1. Target Comparison
+  let targetReqs = ROLE_SKILLS[targetRole] || ["React", "JavaScript", "HTML", "CSS", "Git"];
+  // If target role is custom, look for partial match in dictionary keys
+  const dictKey = Object.keys(ROLE_SKILLS).find(k => k.toLowerCase().includes(targetRole.toLowerCase()) || targetRole.toLowerCase().includes(k.toLowerCase()));
+  if (dictKey) {
+    targetReqs = ROLE_SKILLS[dictKey];
+  }
+  const targetMetrics = getMatchMetrics(targetReqs);
+
+  // 2. Recommended roles
+  const recommended_roles: RecommendedRole[] = [];
+  Object.entries(ROLE_SKILLS).forEach(([roleName, reqs]) => {
+    const { matched, pct } = getMatchMetrics(reqs);
+    let message = "You have a strong foundation. Try mastering a few more skills!";
+    if (pct >= 85) {
+      message = "You are ready to apply for this role.";
+    } else if (pct >= 60) {
+      message = "You are very close! Gain 1-2 skills to apply.";
+    } else if (pct >= 40) {
+      message = "Good entry point. Focus on core requirements.";
+    }
+    recommended_roles.push({
+      role: roleName,
+      match_percentage: pct,
+      matched_skills: matched,
+      message
+    });
+  });
+
+  // Sort by match percentage desc, and take top 4
+  recommended_roles.sort((a, b) => b.match_percentage - a.match_percentage);
+
+  return {
+    target_comparison: {
+      readiness_score: targetMetrics.pct,
+      matching_skills: targetMetrics.matched,
+      missing_skills: targetMetrics.missing
+    },
+    recommended_roles: recommended_roles.slice(0, 4)
+  };
+}
+
+function getFallbackAnalysis(resumeText: string, targetRole: string): AnalysisResult {
+  const ROLE_SKILLS: Record<string, string[]> = {
+    "Frontend Developer": ["React", "HTML", "CSS", "JavaScript", "TypeScript", "Tailwind CSS", "Next.js", "Redux", "Git"],
+    "Full Stack Developer": ["React", "Node.js", "Express", "MongoDB", "SQL", "JavaScript", "TypeScript", "HTML", "CSS", "Git"],
+    "Data Scientist": ["Python", "R", "SQL", "Machine Learning", "Pandas", "NumPy", "Statistics", "Data Visualization", "Jupyter"],
+    "Data Analyst": ["SQL", "Excel", "Tableau", "Power BI", "Python", "Data Visualization", "Statistics", "Reporting"],
+    "AI Engineer": ["Python", "Machine Learning", "Deep Learning", "TensorFlow", "PyTorch", "NLP", "LLMs", "AI APIs"],
+    "Software Engineer": ["Java", "Python", "C++", "Data Structures", "Algorithms", "Git", "SQL", "Software Design"],
+    "DevOps Engineer": ["Docker", "Kubernetes", "AWS", "CI/CD", "Linux", "Terraform", "Git", "Bash", "Monitoring"],
+    "Product Manager": ["Product Strategy", "Agile", "Scrum", "User Research", "Roadmapping", "SQL", "Data Analytics", "Communication"],
+    "QA Engineer": ["Manual Testing", "Automation Testing", "Selenium", "Jest", "Cypress", "Git", "Bug Reporting", "QA Methodologies"]
+  };
+
+  const cleanText = resumeText.toLowerCase();
+  
+  let matchedRole = "Software Engineer";
+  let maxMatch = 0;
+  Object.keys(ROLE_SKILLS).forEach(role => {
+    const common = targetRole.toLowerCase().split(" ").filter(w => role.toLowerCase().includes(w)).length;
+    if (common > maxMatch) {
+      maxMatch = common;
+      matchedRole = role;
+    }
+  });
+
+  const expectedSkills = ROLE_SKILLS[matchedRole];
+  
+  const extracted_skills = expectedSkills.filter(skill => {
+    const regex = new RegExp(`\\b${skill.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\b`, "i");
+    return regex.test(cleanText) || cleanText.includes(skill.toLowerCase());
+  });
+
+  const commonTech = [
+    "Python", "Java", "C++", "JavaScript", "TypeScript", "HTML", "CSS", "React", "Node.js", 
+    "Git", "Docker", "Kubernetes", "AWS", "SQL", "MongoDB", "Express", "Tailwind", "Next.js", 
+    "Redux", "Rust", "Go", "Ruby", "PHP", "Swift", "Kotlin", "Flutter", "C#"
+  ];
+  commonTech.forEach(tech => {
+    if (!extracted_skills.includes(tech) && cleanText.includes(tech.toLowerCase())) {
+      extracted_skills.push(tech);
+    }
+  });
+
+  const missing_skills = expectedSkills.filter(skill => !extracted_skills.includes(skill));
+
+  if (extracted_skills.length === 0) {
+    extracted_skills.push("HTML", "CSS", "JavaScript", "Git");
+  }
+
+  const score = Math.max(35, Math.min(95, Math.round((extracted_skills.filter(s => expectedSkills.includes(s)).length / expectedSkills.length) * 100)));
+
+  const roadmap: Roadmap = [];
+  const skillsToLearn = missing_skills.length > 0 ? missing_skills : ["Advanced Concepts", "System Design", "Testing"];
+  
+  const totalWeeks = Math.max(4, Math.min(6, skillsToLearn.length));
+  for (let i = 0; i < totalWeeks; i++) {
+    const skill = skillsToLearn[i] || "System Design & Best Practices";
+    roadmap.push({
+      week: i + 1,
+      title: `Mastering ${skill}`,
+      objectives: [
+        `Understand core concepts of ${skill}`,
+        `Build a mini-project showcasing ${skill}`,
+        `Read official documentation and best practices`
+      ],
+      outcomes: [
+        `Able to write production-grade code using ${skill}`,
+        `Added new portfolio project to GitHub`,
+        `Comfortable answering technical interview questions on ${skill}`
+      ]
+    });
+  }
+
+  const resources: Resource[] = [];
+  skillsToLearn.slice(0, 4).forEach(skill => {
+    resources.push({
+      title: `${skill} Complete Course`,
+      provider: "freeCodeCamp",
+      url: `https://www.youtube.com/results?search_query=freecodecamp+${encodeURIComponent(skill)}`,
+      skill: skill
+    });
+    resources.push({
+      title: `${skill} Developer Docs`,
+      provider: "Official Documentation",
+      url: `https://www.google.com/search?q=${encodeURIComponent(skill)}+official+documentation`,
+      skill: skill
+    });
+  });
+
+  return {
+    summary: `Resume analyzed successfully. Skill comparison based on a simulated alignment with target requirements of a ${targetRole}.`,
+    extracted_skills,
+    missing_skills,
+    readiness_score: score,
+    roadmap,
+    resources
+  };
+}
+
 
